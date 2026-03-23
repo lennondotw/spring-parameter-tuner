@@ -56,9 +56,9 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
     <div className={cn('flex w-full flex-col gap-2', className)}>
       <Label.Root className="block text-sm font-medium">Click the area below to set target value</Label.Root>
       <div className="h-8 w-full rounded-[6px] bg-gray-700 p-[4px]">
-        <div className="relative h-full w-full overflow-hidden rounded-[4px]">
+        <div className="relative size-full overflow-hidden rounded-[4px]">
           {/* Progress background */}
-          <div className="h-full w-full cursor-pointer bg-gray-600" onClick={handleClick} />
+          <div className="size-full cursor-pointer bg-gray-600" onClick={handleClick} />
 
           {/* Click position markers */}
           <AnimatePresence>

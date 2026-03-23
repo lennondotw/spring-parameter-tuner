@@ -34,11 +34,14 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
   return (
     <div className={cn('flex w-full flex-col gap-4', className)}>
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-md font-semibold">Spring Parameters</h3>
+        <h3 className="font-semibold">Spring Parameters</h3>
         {onReset && (
           <button
             onClick={onReset}
-            className="cursor-pointer rounded bg-gray-700 px-2 py-1 text-xs text-white transition-colors hover:bg-gray-600"
+            className="
+              cursor-pointer rounded-sm bg-gray-700 px-2 py-1 text-xs text-white transition-colors
+              hover:bg-gray-600
+            "
           >
             Reset
           </button>
@@ -62,7 +65,9 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
             <Slider.Range className="absolute h-full rounded-full bg-blue-500" />
           </Slider.Track>
           <Slider.Thumb
-            className="block h-4 w-4 rounded-full border border-blue-500 bg-gray-800 shadow outline-none"
+            className="
+              block size-4 rounded-full border border-blue-500 bg-gray-800 shadow-sm outline-none
+            "
             aria-label="Stiffness"
           />
         </Slider.Root>
@@ -85,7 +90,9 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
             <Slider.Range className="absolute h-full rounded-full bg-blue-500" />
           </Slider.Track>
           <Slider.Thumb
-            className="block h-4 w-4 rounded-full border border-blue-500 bg-gray-800 shadow outline-none"
+            className="
+              block size-4 rounded-full border border-blue-500 bg-gray-800 shadow-sm outline-none
+            "
             aria-label="Damping"
           />
         </Slider.Root>
@@ -108,7 +115,9 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
             <Slider.Range className="absolute h-full rounded-full bg-blue-500" />
           </Slider.Track>
           <Slider.Thumb
-            className="block h-4 w-4 rounded-full border border-blue-500 bg-gray-800 shadow outline-none"
+            className="
+              block size-4 rounded-full border border-blue-500 bg-gray-800 shadow-sm outline-none
+            "
             aria-label="Mass"
           />
         </Slider.Root>

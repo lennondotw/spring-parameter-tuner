@@ -7,5 +7,5 @@ export default defineConfig({
   base: '/popmotion-spring-animation/',
   resolve: {
     tsconfigPaths: true,
-  }
-})
+  },
+});

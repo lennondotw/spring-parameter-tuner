@@ -62,11 +62,18 @@ export const PresetValues: FC<PresetValuesProps> = ({
             <button
               key={value}
               onClick={() => onPresetClick(value)}
-              className={`relative min-w-0 flex-shrink grow basis-1 cursor-pointer rounded py-1 text-sm font-medium text-nowrap transition-colors outline-none ${
-                Math.abs(getPercentage(targetValue) * 100 - getPercentage(value) * 100) < 0.5
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              className={`
+                relative min-w-0 shrink grow basis-1 cursor-pointer rounded-sm py-1 text-sm
+                font-medium text-nowrap transition-colors outline-none
+                ${
+                  Math.abs(getPercentage(targetValue) * 100 - getPercentage(value) * 100) < 0.5
+                    ? 'bg-blue-500 text-white'
+                    : `
+                      bg-gray-700 text-gray-300
+                      hover:bg-gray-600
+                    `
+                }
+              `}
             >
               <span>{value}</span>
               <KeyboardKey keyText={keyText} className="absolute -top-2 -right-1" />
@@ -80,11 +87,16 @@ export const PresetValues: FC<PresetValuesProps> = ({
 
 const KeyboardKey: FC<{ keyText: string; className?: string }> = ({ keyText, className }) => {
   return (
-    <div className={cn('relative h-4 w-4', className)}>
+    <div className={cn('relative size-4', className)}>
       {/* Outer rounded rectangle - slightly visible at the bottom */}
       <div className="absolute inset-0 translate-y-[2px] rounded-sm bg-gray-800"></div>
       {/* Inner small rounded rectangle - main body */}
-      <div className="absolute inset-0 flex items-center justify-center rounded-sm bg-gray-700 text-[9px] font-medium text-white">
+      <div
+        className="
+          absolute inset-0 flex items-center justify-center rounded-sm bg-gray-700 text-[9px]
+          font-medium text-white
+        "
+      >
         {keyText}
       </div>
     </div>

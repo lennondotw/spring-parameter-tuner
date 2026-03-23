@@ -6,7 +6,7 @@ export default {
   singleQuote: true,
   jsxSingleQuote: false,
   tabWidth: 2,
-  plugins: ['prettier-plugin-organize-imports', 'prettier-plugin-tailwindcss'],
+  plugins: ['prettier-plugin-organize-imports'],
   organizeImportsSkipDestructiveCodeActions: true,
   overrides: [
     {

@@ -120,7 +120,12 @@ export const SpringAnimationDemo: FC = () => {
 
   // Render component
   return (
-    <div className="flex w-full max-w-2xl flex-col items-center justify-center md:rounded-lg md:bg-gray-800 md:p-6">
+    <div
+      className="
+        flex w-full max-w-2xl flex-col items-center justify-center
+        md:rounded-lg md:bg-gray-800 md:p-6
+      "
+    >
       <h2 className="text-2xl font-bold">Popmotion Spring Animation Demo</h2>
 
       <div className="flex w-full flex-col gap-6 pt-6">
@@ -143,7 +148,7 @@ export const SpringAnimationDemo: FC = () => {
           </div>
           <AnimationVisualization value={targetValue} />
 
-          <div className="full h-6" />
+          <div className="h-6" />
 
           <div className="mb-1 flex flex-row justify-between">
             <span className="text-sm font-medium">Animated value</span>
