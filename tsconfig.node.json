@@ -6,5 +6,5 @@
     "outDir": "dist-ts/node",
     "tsBuildInfoFile": "dist-ts/node/.tsbuildinfo",
   },
-  "include": ["*.config.ts", "*.config.mts", "*.config.js", "*.config.mjs", ".prettierrc.mjs", "scripts"]
+  "include": ["*.config.ts", "*.config.mts", "*.config.js", "*.config.mjs", ".prettierrc.mjs", "scripts"],
 }

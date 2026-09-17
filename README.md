@@ -14,6 +14,28 @@ Visit the live demo: https://lennondotw.github.io/spring-parameter-tuner/
 - Shareable URL with parameters encoded
 - Preset values for quick testing
 
+## Development
+
+The project uses Node.js 24 and pnpm 12.
+
+```sh
+corepack enable
+pnpm install
+pnpm dev
+```
+
+Run the full local verification suite with:
+
+```sh
+pnpm check
+```
+
+To publish the current build to GitHub Pages from your machine:
+
+```sh
+pnpm run deploy
+```
+
 ## Spring Parameters Explained
 
 | Parameter         | Symbol | Effect                                                |

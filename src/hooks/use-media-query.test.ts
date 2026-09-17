@@ -16,7 +16,7 @@ function createMockMediaQueryList(matches: boolean, listeners: ChangeListener[])
     }),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(() => true),
-  } as unknown as MediaQueryList;
+  };
 }
 
 describe('useMediaQuery', () => {
@@ -41,23 +41,20 @@ describe('useMediaQuery', () => {
 
   it('updates when media query changes', () => {
     let currentMatches = false;
-    vi.spyOn(window, 'matchMedia').mockImplementation(
-      () =>
-        ({
-          get matches() {
-            return currentMatches;
-          },
-          media: '',
-          onchange: null,
-          addListener: vi.fn(),
-          removeListener: vi.fn(),
-          addEventListener: vi.fn((_type: string, cb: ChangeListener) => {
-            listeners.push(cb);
-          }),
-          removeEventListener: vi.fn(),
-          dispatchEvent: vi.fn(() => true),
-        }) as unknown as MediaQueryList
-    );
+    vi.spyOn(window, 'matchMedia').mockImplementation(() => ({
+      get matches() {
+        return currentMatches;
+      },
+      media: '',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn((_type: string, cb: ChangeListener) => {
+        listeners.push(cb);
+      }),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(() => true),
+    }));
 
     const { result } = renderHook(() => useMediaQuery('(width >= 48rem)'));
     expect(result.current).toBe(false);

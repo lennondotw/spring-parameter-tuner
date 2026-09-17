@@ -1,8 +1,7 @@
+import eslintReact from '@eslint-react/eslint-plugin';
 import eslintJs from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginBetterTailwindcss from 'eslint-plugin-better-tailwindcss';
-import prettierPlugin from 'eslint-plugin-prettier';
-import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import reactRefreshPlugin from 'eslint-plugin-react-refresh';
 import tsEslint from 'typescript-eslint';
@@ -58,24 +57,22 @@ const eslintConfig = [
 
   // React rules
   {
+    ...eslintReact.configs['recommended-type-checked'],
+    files: TS_FILES,
+  },
+  {
     plugins: {
-      react: reactPlugin,
       'react-hooks': /** @type { any } } */ (reactHooksPlugin),
       'react-refresh': reactRefreshPlugin,
       'better-tailwindcss': eslintPluginBetterTailwindcss,
     },
     rules: {
-      ...reactPlugin.configs.recommended.rules,
-      ...reactPlugin.configs['jsx-runtime'].rules,
-
       .../** @type { Record<string, unknown> } */ (
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         /** @type { any } */ (reactHooksPlugin).configs['recommended-latest'].rules
       ),
 
       ...eslintPluginBetterTailwindcss.configs['recommended-warn'].rules,
-      'react/prop-types': 'off',
-      'react/no-unescaped-entities': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'better-tailwindcss/no-unregistered-classes': 'off',
       'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
@@ -92,11 +89,6 @@ const eslintConfig = [
   // Prettier (must be last to override conflicting rules)
   {
     rules: eslintConfigPrettier.rules,
-    files: TS_FILES,
-  },
-  {
-    plugins: { prettier: prettierPlugin },
-    rules: { 'prettier/prettier': 'error' },
     files: TS_FILES,
   },
 ];
