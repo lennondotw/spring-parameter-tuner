@@ -5,12 +5,24 @@ import { resolve } from 'node:path';
 
 const distPath = resolve(import.meta.dirname, '../dist');
 
-await ghPages.publish(distPath, {
-  dotfiles: false,
-  push: true,
-  history: false,
-  message: 'Publish build to GitHub Pages',
-  remove: '**/{,.*}/**/{,.}*',
-});
+let publishError: unknown;
+
+await ghPages.publish(
+  distPath,
+  {
+    dotfiles: false,
+    nojekyll: true,
+    push: true,
+    history: false,
+    message: 'Publish build to GitHub Pages',
+  },
+  (error: unknown) => {
+    publishError = error;
+  }
+);
+
+if (publishError) {
+  throw publishError;
+}
 
 console.log('Artifacts committed and force pushed to gh-pages branch');
