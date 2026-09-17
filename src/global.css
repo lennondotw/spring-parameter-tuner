@@ -12,6 +12,10 @@
   --font-title: 'Nunito', var(--font-sans);
 }
 
+html {
+  overflow-x: clip;
+}
+
 :root {
   line-height: 1.5;
   font-weight: 400;
