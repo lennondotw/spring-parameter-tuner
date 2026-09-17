@@ -2,10 +2,9 @@ import { PERCEPTUAL_PARAMS } from '#src/constants/spring-params.js';
 import { cn } from '#src/utils/cn.js';
 import type { DampingType } from '#src/utils/spring-physics.js';
 import { calculateCriticalDamping, getDampingType, physicalToPerceptual } from '#src/utils/spring-physics.js';
-import * as Label from '@radix-ui/react-label';
-import * as Slider from '@radix-ui/react-slider';
 import type { FC } from 'react';
 import { useMemo } from 'react';
+import { ParameterSlider } from './parameter-slider.js';
 
 interface DerivedValues {
   omega: number;
@@ -58,73 +57,44 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
 
   const dampingTypeLabel = DAMPING_TYPE_LABEL[derived.dampingType];
 
-  const handleOmegaChange = (values: number[]) => {
-    if (values[0] !== undefined && onOmegaChange) {
-      onOmegaChange(values[0]);
-    }
+  const handleOmegaChange = (value: number) => {
+    onOmegaChange?.(value);
   };
 
-  const handleZetaChange = (values: number[]) => {
-    if (values[0] !== undefined && onZetaChange) {
-      onZetaChange(values[0]);
-    }
+  const handleZetaChange = (value: number) => {
+    onZetaChange?.(value);
   };
 
   return (
     <div className={cn('flex w-full flex-col gap-4', className)}>
       <h4 className="text-sm font-medium text-gray-400">Perceptual Parameters</h4>
 
-      {/* Omega (ω) - Natural Frequency */}
-      <div className="flex flex-col">
-        <div className="flex justify-between text-sm font-medium">
-          <Label.Root>
-            ω (frequency): <span className="font-mono">{derived.omega.toFixed(2)}</span> rad/s
-          </Label.Root>
-          <span className="text-xs text-gray-500">{PERCEPTUAL_PARAMS.OMEGA.DESCRIPTION}</span>
-        </div>
-        <Slider.Root
-          className="relative flex h-5 w-full touch-none items-center select-none"
-          value={[derived.omega]}
-          onValueChange={handleOmegaChange}
-          min={PERCEPTUAL_PARAMS.OMEGA.MIN}
-          max={PERCEPTUAL_PARAMS.OMEGA.MAX}
-          step={PERCEPTUAL_PARAMS.OMEGA.STEP}
-        >
-          <Slider.Track className="relative h-1 w-full grow rounded-full bg-gray-700">
-            <Slider.Range className="absolute h-full rounded-full bg-purple-500" />
-          </Slider.Track>
-          <Slider.Thumb
-            className="block size-4 rounded-full border border-purple-500 bg-gray-800 shadow-sm outline-none"
-            aria-label="Natural frequency"
-          />
-        </Slider.Root>
-      </div>
+      <ParameterSlider
+        ariaLabel="Natural frequency"
+        label="ω (frequency)"
+        value={derived.omega}
+        min={PERCEPTUAL_PARAMS.OMEGA.MIN}
+        max={PERCEPTUAL_PARAMS.OMEGA.MAX}
+        step={PERCEPTUAL_PARAMS.OMEGA.STEP}
+        decimals={2}
+        description={PERCEPTUAL_PARAMS.OMEGA.DESCRIPTION}
+        accent="purple"
+        unit="rad/s"
+        onValueChange={handleOmegaChange}
+      />
 
-      {/* Zeta (ζ) - Damping Ratio */}
-      <div className="flex flex-col">
-        <div className="flex justify-between text-sm font-medium">
-          <Label.Root>
-            ζ (damping ratio): <span className="font-mono">{derived.zeta.toFixed(3)}</span>
-          </Label.Root>
-          <span className="text-xs text-gray-500">{PERCEPTUAL_PARAMS.ZETA.DESCRIPTION}</span>
-        </div>
-        <Slider.Root
-          className="relative flex h-5 w-full touch-none items-center select-none"
-          value={[derived.zeta]}
-          onValueChange={handleZetaChange}
-          min={PERCEPTUAL_PARAMS.ZETA.MIN}
-          max={PERCEPTUAL_PARAMS.ZETA.MAX}
-          step={PERCEPTUAL_PARAMS.ZETA.STEP}
-        >
-          <Slider.Track className="relative h-1 w-full grow rounded-full bg-gray-700">
-            <Slider.Range className="absolute h-full rounded-full bg-purple-500" />
-          </Slider.Track>
-          <Slider.Thumb
-            className="block size-4 rounded-full border border-purple-500 bg-gray-800 shadow-sm outline-none"
-            aria-label="Damping ratio"
-          />
-        </Slider.Root>
-      </div>
+      <ParameterSlider
+        ariaLabel="Damping ratio"
+        label="ζ (damping ratio)"
+        value={derived.zeta}
+        min={PERCEPTUAL_PARAMS.ZETA.MIN}
+        max={PERCEPTUAL_PARAMS.ZETA.MAX}
+        step={PERCEPTUAL_PARAMS.ZETA.STEP}
+        decimals={3}
+        description={PERCEPTUAL_PARAMS.ZETA.DESCRIPTION}
+        accent="purple"
+        onValueChange={handleZetaChange}
+      />
 
       {/* Read-only status */}
       <div className="mt-1 grid grid-cols-2 gap-x-4 text-sm">

@@ -1,6 +1,5 @@
 import { cn } from '#src/utils/cn.js';
 import { clamp } from '#src/utils/math.js';
-import * as Label from '@radix-ui/react-label';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FC, MouseEvent } from 'react';
 import { useState } from 'react';
@@ -55,7 +54,7 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
 
   return (
     <div className={cn('flex w-full flex-col gap-2', className)}>
-      <Label.Root className="block text-sm font-medium">Click the area below to set target value</Label.Root>
+      <div className="block text-sm font-medium">Click the area below to set target value</div>
       <div className="h-8 w-full rounded-[6px] bg-gray-700 p-[4px]">
         <div className="relative size-full overflow-hidden rounded-[4px]">
           {/* Progress background */}

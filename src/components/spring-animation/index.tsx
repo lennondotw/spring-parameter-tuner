@@ -67,25 +67,19 @@ export const SpringAnimationDemo: FC = () => {
   };
 
   // Handle slider value change
-  const handleStiffnessChange = (values: number[]) => {
-    if (values[0] !== undefined) {
-      setStiffness(values[0]);
-      throttledUpdateStiffness(values[0]);
-    }
+  const handleStiffnessChange = (value: number) => {
+    setStiffness(value);
+    throttledUpdateStiffness(value);
   };
 
-  const handleDampingChange = (values: number[]) => {
-    if (values[0] !== undefined) {
-      setDamping(values[0]);
-      throttledUpdateDamping(values[0]);
-    }
+  const handleDampingChange = (value: number) => {
+    setDamping(value);
+    throttledUpdateDamping(value);
   };
 
-  const handleMassChange = (values: number[]) => {
-    if (values[0] !== undefined) {
-      setMass(values[0]);
-      throttledUpdateMass(values[0]);
-    }
+  const handleMassChange = (value: number) => {
+    setMass(value);
+    throttledUpdateMass(value);
   };
 
   // Handle perceptual parameter changes (ω and ζ)
