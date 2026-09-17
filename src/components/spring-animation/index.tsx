@@ -126,7 +126,7 @@ export const SpringAnimationDemo: FC = () => {
   };
 
   return (
-    <main className="flex w-full max-w-5xl flex-1 flex-col gap-8">
+    <main className="flex w-full max-w-5xl flex-col gap-8">
       <header className="flex items-center gap-3 px-4">
         <svg
           width="24"
@@ -145,7 +145,7 @@ export const SpringAnimationDemo: FC = () => {
         </svg>
         <h1 className="font-title text-lg font-semibold tracking-tight">spring parameter tuner</h1>
       </header>
-      <div className="grid flex-1 content-start items-start gap-4 md:grid-cols-2">
+      <div className="grid items-start gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-4">
           <ModulePanel persistenceId="parameters" title="Parameters">
             <SpringParameterControl
