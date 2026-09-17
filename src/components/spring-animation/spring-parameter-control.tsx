@@ -19,6 +19,7 @@ export interface SpringParameterControlProps {
   onOmegaChange?: (omega: number) => void;
   onZetaChange?: (zeta: number) => void;
   onReset?: () => void;
+  onNormalize?: () => void;
 }
 
 /**
@@ -34,24 +35,12 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
   onOmegaChange,
   onZetaChange,
   onReset,
+  onNormalize,
   className,
 }) => {
   return (
-    <div className={cn('flex w-full flex-col gap-4', className)}>
-      <div className="flex items-end justify-between">
-        <h4 className="text-sm font-medium text-gray-400">Spring Parameters</h4>
-        {onReset && (
-          <button
-            onClick={onReset}
-            className="
-              cursor-pointer rounded-sm bg-gray-700 px-2 py-1 text-xs text-white transition-colors
-              hover:bg-gray-600
-            "
-          >
-            Reset
-          </button>
-        )}
-      </div>
+    <div className={cn('flex w-full flex-col gap-3', className)}>
+      <h4 className="text-xs font-medium tracking-wide text-neutral-500">Spring parameters</h4>
 
       <ParameterSlider
         ariaLabel="Stiffness"
@@ -62,7 +51,6 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
         step={SPRING_PARAMS.STIFFNESS.STEP}
         decimals={2}
         description={SPRING_PARAMS.STIFFNESS.DESCRIPTION}
-        accent="blue"
         onValueChange={onStiffnessChange}
       />
 
@@ -75,22 +63,44 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
         step={SPRING_PARAMS.DAMPING.STEP}
         decimals={2}
         description={SPRING_PARAMS.DAMPING.DESCRIPTION}
-        accent="blue"
         onValueChange={onDampingChange}
       />
 
-      <ParameterSlider
-        ariaLabel="Mass"
-        label="m (mass)"
-        value={mass}
-        min={SPRING_PARAMS.MASS.MIN}
-        max={SPRING_PARAMS.MASS.MAX}
-        step={SPRING_PARAMS.MASS.STEP}
-        decimals={1}
-        description={SPRING_PARAMS.MASS.DESCRIPTION}
-        accent="blue"
-        onValueChange={onMassChange}
-      />
+      <div className="flex flex-col gap-4">
+        <ParameterSlider
+          ariaLabel="Mass"
+          label="m (mass)"
+          value={mass}
+          min={SPRING_PARAMS.MASS.MIN}
+          max={SPRING_PARAMS.MASS.MAX}
+          step={SPRING_PARAMS.MASS.STEP}
+          decimals={1}
+          description={SPRING_PARAMS.MASS.DESCRIPTION}
+          onValueChange={onMassChange}
+        />
+
+        <div className="flex items-center gap-2">
+          {onNormalize && (
+            <button
+              type="button"
+              onClick={onNormalize}
+              title="Set mass to 1 while preserving the spring response"
+              className="cursor-pointer rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            >
+              Normalize
+            </button>
+          )}
+          {onReset && (
+            <button
+              type="button"
+              onClick={onReset}
+              className="cursor-pointer rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
 
       <Divider />
 

@@ -13,18 +13,16 @@ export function resetUrlParams(): void {
 // Update URL parameters
 export function updateUrlParams(params: Partial<SpringParams>): void {
   const url = new URL(window.location.href);
-  const currentUrlParams = getSpringParamsFromUrl(url);
-
   for (const [key, value] of entriesWithType(params)) {
-    if (!value) continue;
-    if (currentUrlParams[key] === value) continue;
-
-    const formatNumber = (num: number): string => {
-      const formatted = num.toFixed(2).replace(/\.?0+$/, '');
-      return formatted.endsWith('.') ? formatted.slice(0, -1) : formatted;
-    };
-
-    url.searchParams.set(key, formatNumber(value));
+    if (value === undefined || !Number.isFinite(value) || value <= 0) continue;
+    // Compare at the same precision used in the URL, including batch writes.
+    const rounded = Number(value.toFixed(2));
+    const formatted = String(rounded === 0 ? value : rounded);
+    if (formatted === String(defaultSpringParams[key])) {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, formatted);
+    }
   }
 
   // Update URL without refreshing the page

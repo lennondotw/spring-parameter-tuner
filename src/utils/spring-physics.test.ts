@@ -7,6 +7,12 @@ import {
 } from './spring-physics.js';
 
 describe('spring-physics', () => {
+  it('defaults both conversions to unit mass', () => {
+    expect(perceptualToPhysical(35, 1)).toEqual({ stiffness: 1225, damping: 70 });
+    expect(physicalToPerceptual(1225, 70)).toEqual({ omega: 35, zeta: 1 });
+    expect(perceptualToPhysical(25, 1)).toEqual({ stiffness: 625, damping: 50 });
+  });
+
   describe('perceptualToPhysical', () => {
     it('converts omega and zeta to stiffness and damping', () => {
       const omega = 20;

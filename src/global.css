@@ -1,26 +1,46 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url('@fontsource/nunito/files/nunito-latin-600-normal.woff2') format('woff2');
+}
+
+@theme {
+  --font-title: 'Nunito', var(--font-sans);
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-
-  color-scheme: dark;
-
-  @apply bg-gray-800 text-gray-50;
-
-  @media (width >= 48rem) {
-    @apply bg-gray-950;
-  }
+  color-scheme: light dark;
+  background: #fff;
+  color: #171717;
 }
 
 body {
   margin: 0;
-  padding: 0;
+  min-width: 320px;
+}
+button:focus-visible {
+  outline: 2px solid #a3a3a3;
+  outline-offset: -3px;
+}
+::selection {
+  background: #525252;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background: #000;
+    color: #ededed;
+  }
 }

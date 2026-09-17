@@ -6,5 +6,7 @@ export interface DividerProps {
 }
 
 export const Divider: FC<DividerProps> = ({ className }) => {
-  return <div className={cn('h-px w-full bg-gray-700', className)} />;
+  return (
+    <div aria-hidden="true" className={cn('h-px w-full shrink-0 bg-neutral-100 dark:bg-neutral-900', className)} />
+  );
 };

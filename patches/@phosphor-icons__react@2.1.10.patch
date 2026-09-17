@@ -1,0 +1,20 @@
+diff --git a/dist/csr/Minus.d.ts b/dist/csr/Minus.d.ts
+index bb5ed05837d209ba72129da759d263ff6b0845f3..98f75d9b4b4850b6bc3733bda0c00c642b4ca921 100644
+--- a/dist/csr/Minus.d.ts
++++ b/dist/csr/Minus.d.ts
+@@ -1,4 +1,4 @@
+-import { Icon } from '../lib/types';
++import { Icon } from '../lib/types.js';
+ /**
+  * @regular ![img](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGZpbGw9IiMwMDAiPjxyZWN0IHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjRkZGIiByeD0iNDAiIHJ5PSI0MCIvPjxwYXRoIGQ9Ik0yMjQsMTI4YTgsOCwwLDAsMS04LDhINDBhOCw4LDAsMCwxLDAtMTZIMjE2QTgsOCwwLDAsMSwyMjQsMTI4WiIvPjwvc3ZnPg==)
+  * @thin ![img](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGZpbGw9IiMwMDAiPjxyZWN0IHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjRkZGIiByeD0iNDAiIHJ5PSI0MCIvPjxwYXRoIGQ9Ik0yMjAsMTI4YTQsNCwwLDAsMS00LDRINDBhNCw0LDAsMCwxLDAtOEgyMTZBNCw0LDAsMCwxLDIyMCwxMjhaIi8+PC9zdmc+)
+diff --git a/dist/csr/Plus.d.ts b/dist/csr/Plus.d.ts
+index c9d608157b716b87aa832e2bf36916c4caa72b1c..26bd32d98b850285ab6b25cf6540cc0c338473f7 100644
+--- a/dist/csr/Plus.d.ts
++++ b/dist/csr/Plus.d.ts
+@@ -1,4 +1,4 @@
+-import { Icon } from '../lib/types';
++import { Icon } from '../lib/types.js';
+ /**
+  * @regular ![img](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGZpbGw9IiMwMDAiPjxyZWN0IHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjRkZGIiByeD0iNDAiIHJ5PSI0MCIvPjxwYXRoIGQ9Ik0yMjQsMTI4YTgsOCwwLDAsMS04LDhIMTM2djgwYTgsOCwwLDAsMS0xNiwwVjEzNkg0MGE4LDgsMCwwLDEsMC0xNmg4MFY0MGE4LDgsMCwwLDEsMTYsMHY4MGg4MEE4LDgsMCwwLDEsMjI0LDEyOFoiLz48L3N2Zz4=)
+  * @thin ![img](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGZpbGw9IiMwMDAiPjxyZWN0IHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjRkZGIiByeD0iNDAiIHJ5PSI0MCIvPjxwYXRoIGQ9Ik0yMjAsMTI4YTQsNCwwLDAsMS00LDRIMTMydjg0YTQsNCwwLDAsMS04LDBWMTMySDQwYTQsNCwwLDAsMSwwLThoODRWNDBhNCw0LDAsMCwxLDgsMHY4NGg4NEE0LDQsMCwwLDEsMjIwLDEyOFoiLz48L3N2Zz4=)

@@ -3,17 +3,13 @@
  * Bidirectional conversion between physical and perceptual parameters
  */
 
-/**
- * Convert perceptual parameters to physical (perceptual → physical)
- * @param omega - Natural frequency (ω)
- * @param zeta - Damping ratio (ζ)
- * @param mass - Object mass
- */
-export function perceptualToPhysical(
-  omega: number,
-  zeta: number,
-  mass: number
-): { stiffness: number; damping: number } {
+/** Divide the equation of motion by mass without changing its response. */
+export function normalizeSpring(stiffness: number, damping: number, mass: number) {
+  return { stiffness: stiffness / mass, damping: damping / mass, mass: 1 };
+}
+
+/** Convert angular frequency ω (rad/s), damping ratio ζ and mass to stiffness/damping. */
+export function perceptualToPhysical(omega: number, zeta: number, mass = 1): { stiffness: number; damping: number } {
   // stiffness = ω² × m
   const stiffness = omega * omega * mass;
   // damping = ζ × 2 × ω × m
@@ -27,11 +23,7 @@ export function perceptualToPhysical(
  * @param damping - Damping coefficient (c)
  * @param mass - Object mass (m)
  */
-export function physicalToPerceptual(
-  stiffness: number,
-  damping: number,
-  mass: number
-): { omega: number; zeta: number } {
+export function physicalToPerceptual(stiffness: number, damping: number, mass = 1): { omega: number; zeta: number } {
   // ω = √(k / m)
   const omega = Math.sqrt(stiffness / mass);
   // ζ = c / (2 × √(k × m)) = c / (2 × ω × m)

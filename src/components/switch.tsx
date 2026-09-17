@@ -18,7 +18,7 @@ export const Switch: FC<SwitchProps> = ({ checked, onCheckedChange, label, descr
     <label htmlFor={id} className={cn('flex cursor-pointer items-center justify-between gap-3', className)}>
       <div className="flex flex-col">
         {label && <span className="text-sm font-medium">{label}</span>}
-        {description && <span className="text-xs text-gray-500">{description}</span>}
+        {description && <span className="text-xs text-neutral-500">{description}</span>}
       </div>
       <BaseSwitch.Root
         id={id}
@@ -27,14 +27,14 @@ export const Switch: FC<SwitchProps> = ({ checked, onCheckedChange, label, descr
         className={cn(
           `
             relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full
-            transition-colors outline-none has-focus-visible:ring-2 has-focus-visible:ring-blue-300
+            transition-colors outline-none has-focus-visible:ring-2 has-focus-visible:ring-neutral-600 dark:has-focus-visible:ring-neutral-400
           `,
-          checked ? 'bg-blue-500' : 'bg-gray-600'
+          checked ? 'bg-neutral-800 dark:bg-neutral-200' : 'bg-neutral-200 dark:bg-neutral-800'
         )}
       >
         <BaseSwitch.Thumb
           className={cn(
-            'pointer-events-none block size-4 rounded-full bg-white shadow-sm transition-transform',
+            'pointer-events-none block size-4 rounded-full bg-white shadow-sm transition-transform dark:bg-black',
             checked ? 'translate-x-[18px]' : 'translate-x-0.5'
           )}
         />

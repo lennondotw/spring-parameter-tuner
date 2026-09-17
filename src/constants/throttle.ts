@@ -1,1 +1,3 @@
-export const URL_UPDATE_THROTTLE_MS = 100;
+export const URL_UPDATE_THROTTLE_MS = 200;
+
+export const CURVE_UPDATE_THROTTLE_MS = 50;

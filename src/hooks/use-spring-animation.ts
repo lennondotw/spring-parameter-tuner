@@ -14,6 +14,8 @@ export interface UseSpringAnimationOptions {
   mass: number;
   preserveVelocity: boolean;
   initialValue?: number;
+  restDelta?: number;
+  restSpeed?: number;
 }
 
 /**
@@ -27,6 +29,8 @@ export function useSpringAnimation({
   mass,
   preserveVelocity,
   initialValue = targetValue,
+  restDelta = 0.001,
+  restSpeed = 0.001,
 }: UseSpringAnimationOptions): number {
   const [currentValue, setCurrentValue, latestCurrentValueRef] = useStateWithRef(initialValue);
   const velocityTracker = useVelocityTracker();
@@ -47,8 +51,8 @@ export function useSpringAnimation({
       damping,
       mass,
       velocity: initialVelocity,
-      restDelta: 0.001,
-      restSpeed: 0.001,
+      restDelta,
+      restSpeed,
       onUpdate: (value) => {
         velocityTracker.track(value);
         setCurrentValue(value);
@@ -66,6 +70,8 @@ export function useSpringAnimation({
     };
   }, [
     damping,
+    restDelta,
+    restSpeed,
     latestCurrentValueRef,
     mass,
     preserveVelocity,

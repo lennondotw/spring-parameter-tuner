@@ -1,28 +1,20 @@
 import { Divider } from '#src/components/divider.js';
-import { Switch } from '#src/components/switch.js';
 import { defaultSpringParams } from '#src/config/spring-schema.js';
-import { resetUrlParams } from '#src/config/spring-url-params.js';
-import {
-  DEFAULT_TARGET_VALUE,
-  MAX_MARK,
-  MIN_MARK,
-  PRESET_SHORTCUTS,
-  PRESET_VALUES,
-  SMALL_SCREEN_PRESET_SHORTCUTS,
-  SMALL_SCREEN_PRESET_VALUES,
-} from '#src/constants/marks.js';
-import { useMediaQuery } from '#src/hooks/use-media-query.js';
+import { resetUrlParams, updateUrlParams } from '#src/config/spring-url-params.js';
+import { DEFAULT_TARGET_VALUE, MAX_MARK, MIN_MARK } from '#src/constants/marks.js';
 import { useSpringAnimation } from '#src/hooks/use-spring-animation.js';
 import { useSpringConfig } from '#src/hooks/use-spring-config.js';
+import { useTargetShortcuts } from '#src/hooks/use-target-shortcuts.js';
 import { useThrottledUrlUpdates } from '#src/hooks/use-throttled-url-updates.js';
-import { perceptualToPhysical } from '#src/utils/spring-physics.js';
+import { normalizeSpring, perceptualToPhysical } from '#src/utils/spring-physics.js';
 import type { FC } from 'react';
-import { useState } from 'react';
-import { AnimationVisualization } from './animation-visualization.js';
+import { useCallback, useMemo, useState } from 'react';
+import { AdvancedSettings } from './advanced-settings.js';
+import { AnimationPreview } from './animation-preview.js';
 import { HelpText } from './help-text.js';
-import { PresetValues } from './preset-values.js';
+import { ModulePanel } from './module-panel.js';
+import { ResponseCurve } from './response-curve.js';
 import { SpringParameterControl } from './spring-parameter-control.js';
-import { TargetValueSelector } from './target-value-selector.js';
 
 /**
  * Main component for Spring Animation Demo
@@ -34,7 +26,15 @@ export const SpringAnimationDemo: FC = () => {
 
   // Animation state
   const [targetValue, setTargetValue] = useState(DEFAULT_TARGET_VALUE);
+  const [activePreset, setActivePreset] = useState<number | null>(DEFAULT_TARGET_VALUE);
   const [preserveVelocity, setPreserveVelocity] = useState(true);
+
+  const [restDelta, setRestDelta] = useState(0.001);
+  const [restSpeed, setRestSpeed] = useState(0.001);
+  const responseOptions = useMemo(
+    () => ({ stiffness, damping, mass, restDelta, restSpeed }),
+    [stiffness, damping, mass, restDelta, restSpeed]
+  );
 
   // Spring animation
   const currentValue = useSpringAnimation({
@@ -44,26 +44,41 @@ export const SpringAnimationDemo: FC = () => {
     mass,
     preserveVelocity,
     initialValue: DEFAULT_TARGET_VALUE,
+    restDelta,
+    restSpeed,
   });
 
-  // Responsive preset values
-  const isMdOrLarger = useMediaQuery('(width >= 48rem)');
-  const presetValues = isMdOrLarger ? PRESET_VALUES : SMALL_SCREEN_PRESET_VALUES;
-  const presetShortcuts = isMdOrLarger ? PRESET_SHORTCUTS : SMALL_SCREEN_PRESET_SHORTCUTS;
-
   const handleTrackClick = (percentage: number) => {
+    setActivePreset(null);
     setTargetValue(percentage * (MAX_MARK - MIN_MARK) + MIN_MARK);
   };
 
-  const handlePresetClick = (value: number) => {
+  const handlePresetClick = useCallback((value: number) => {
+    setActivePreset(value);
     setTargetValue(value);
-  };
+  }, []);
+
+  useTargetShortcuts(handlePresetClick);
 
   const handleReset = () => {
+    throttledUpdateStiffness.cancel();
+    throttledUpdateDamping.cancel();
+    throttledUpdateMass.cancel();
     resetUrlParams();
     setStiffness(defaultSpringParams.stiffness);
     setDamping(defaultSpringParams.damping);
     setMass(defaultSpringParams.mass);
+  };
+
+  const handleNormalize = () => {
+    const normalized = normalizeSpring(stiffness, damping, mass);
+    throttledUpdateStiffness.cancel();
+    throttledUpdateDamping.cancel();
+    throttledUpdateMass.cancel();
+    setStiffness(normalized.stiffness);
+    setDamping(normalized.damping);
+    setMass(normalized.mass);
+    updateUrlParams(normalized);
   };
 
   // Handle slider value change
@@ -110,72 +125,72 @@ export const SpringAnimationDemo: FC = () => {
     throttledUpdateDamping(newDamping);
   };
 
-  // Render component
   return (
-    <div
-      className="
-        flex w-full max-w-2xl flex-col items-center justify-center
-        md:rounded-lg md:bg-gray-800 md:p-6
-      "
-    >
-      <h2 className="text-2xl font-bold">Spring Parameter Tuner</h2>
-
-      <div className="flex w-full flex-col gap-6 pt-6">
-        {/* Spring parameter sliders */}
-        <SpringParameterControl
-          stiffness={stiffness}
-          damping={damping}
-          mass={mass}
-          onStiffnessChange={handleStiffnessChange}
-          onDampingChange={handleDampingChange}
-          onMassChange={handleMassChange}
-          onOmegaChange={handleOmegaChange}
-          onZetaChange={handleZetaChange}
-          onReset={handleReset}
-        />
-
-        <Divider />
-
-        {/* Axis and ball visualization */}
-        <div className="flex w-full flex-col">
-          <div className="mb-1 flex flex-row justify-between">
-            <span className="text-sm font-medium">Target value</span>
-            <span className="text-sm font-medium">{targetValue.toFixed(2)}</span>
-          </div>
-          <AnimationVisualization value={targetValue} />
-
-          <div className="h-6" />
-
-          <div className="mb-1 flex flex-row justify-between">
-            <span className="text-sm font-medium">Animated value</span>
-            <span className="text-sm font-medium">{currentValue.toFixed(2)}</span>
-          </div>
-          <AnimationVisualization value={currentValue} />
+    <main className="flex w-full max-w-5xl flex-1 flex-col gap-8">
+      <header className="flex items-center gap-3 px-4">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+          className="text-neutral-600 dark:text-neutral-400"
+        >
+          <path
+            d="M2 17C6 17 5 5 9 5S10 19 14 19S16 9 22 9"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+        <h1 className="font-title text-lg font-semibold tracking-tight">spring parameter tuner</h1>
+      </header>
+      <div className="grid flex-1 content-start items-start gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <ModulePanel persistenceId="parameters" title="Parameters">
+            <SpringParameterControl
+              stiffness={stiffness}
+              damping={damping}
+              mass={mass}
+              onStiffnessChange={handleStiffnessChange}
+              onDampingChange={handleDampingChange}
+              onMassChange={handleMassChange}
+              onOmegaChange={handleOmegaChange}
+              onZetaChange={handleZetaChange}
+              onReset={handleReset}
+              onNormalize={handleNormalize}
+            />
+          </ModulePanel>
+          <ModulePanel persistenceId="advanced" title="Advanced" defaultOpen={false}>
+            <AdvancedSettings
+              restDelta={restDelta}
+              restSpeed={restSpeed}
+              onRestDeltaChange={setRestDelta}
+              onRestSpeedChange={setRestSpeed}
+            />
+          </ModulePanel>
         </div>
-
-        {/* Preset target values */}
-        <PresetValues
-          presetValues={presetValues}
-          presetShortcuts={presetShortcuts}
-          targetValue={targetValue}
-          onPresetClick={handlePresetClick}
-        />
-
-        {/* Real-time data input area */}
-        <TargetValueSelector onTrackClick={handleTrackClick} />
-
-        <Divider />
-
-        {/* Velocity preservation toggle */}
-        <Switch
-          checked={preserveVelocity}
-          onCheckedChange={setPreserveVelocity}
-          label="Preserve velocity"
-          description="Keep current velocity when switching to a new target"
-        />
-
-        <HelpText />
+        <div className="flex flex-col gap-4">
+          <ModulePanel persistenceId="response" title="Response curve">
+            <ResponseCurve options={responseOptions} />
+          </ModulePanel>
+          <ModulePanel persistenceId="playback" title="Target & playback" allowOverflow>
+            <AnimationPreview
+              activePreset={activePreset}
+              targetValue={targetValue}
+              currentValue={currentValue}
+              onPresetClick={handlePresetClick}
+              onTrackClick={handleTrackClick}
+              preserveVelocity={preserveVelocity}
+              onPreserveVelocityChange={setPreserveVelocity}
+            />
+          </ModulePanel>
+        </div>
       </div>
-    </div>
+      <footer className="flex flex-col gap-8 px-4">
+        <Divider />
+        <HelpText />
+      </footer>
+    </main>
   );
 };

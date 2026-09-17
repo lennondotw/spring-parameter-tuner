@@ -1,4 +1,4 @@
-import { cn } from '#src/utils/cn.js';
+import { QuantizedSlider } from '#src/components/quantized-slider.js';
 import { NumberField } from '@base-ui/react/number-field';
 import { Slider } from '@base-ui/react/slider';
 import type { FC } from 'react';
@@ -12,21 +12,9 @@ export interface ParameterSliderProps {
   step: number;
   decimals: number;
   description: string;
-  accent: 'blue' | 'purple';
   unit?: string;
   onValueChange: (value: number) => void;
 }
-
-const ACCENT_CLASSES = {
-  blue: {
-    indicator: 'bg-blue-500',
-    thumb: 'border-blue-500 has-focus-visible:ring-blue-300',
-  },
-  purple: {
-    indicator: 'bg-purple-500',
-    thumb: 'border-purple-500 has-focus-visible:ring-purple-300',
-  },
-} as const;
 
 export const ParameterSlider: FC<ParameterSliderProps> = ({
   ariaLabel,
@@ -37,12 +25,10 @@ export const ParameterSlider: FC<ParameterSliderProps> = ({
   step,
   decimals,
   description,
-  accent,
   unit,
   onValueChange,
 }) => {
   const largeStep = step * 10;
-  const accentClasses = ACCENT_CLASSES[accent];
 
   const handleNumberChange = (nextValue: number | null) => {
     if (nextValue !== null) {
@@ -51,10 +37,11 @@ export const ParameterSlider: FC<ParameterSliderProps> = ({
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-between text-sm font-medium">
-        <div className="flex items-baseline">
-          <span>{label}:&nbsp;</span>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="text-neutral-700 dark:text-neutral-300">{label}</span>
+        <div className="flex items-center gap-2">
+          {unit && <span className="text-xs text-neutral-500">{unit}</span>}
           <NumberField.Root
             value={value}
             onValueChange={handleNumberChange}
@@ -62,45 +49,36 @@ export const ParameterSlider: FC<ParameterSliderProps> = ({
             max={max}
             step={step}
             largeStep={largeStep}
-            format={{
-              minimumFractionDigits: decimals,
-              maximumFractionDigits: decimals,
-              useGrouping: false,
-            }}
-            className="inline-flex"
+            format={{ minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false }}
           >
             <NumberField.Input
               aria-label={`${ariaLabel} value`}
               inputMode="decimal"
-              className="
-                w-[8ch] rounded-xs bg-transparent px-0.5 font-mono text-gray-50 outline-none
-                hover:bg-gray-700/50
-                focus-visible:ring-2 focus-visible:ring-gray-400
-              "
+              className="h-8 w-[9ch] rounded-md border border-neutral-200 bg-transparent px-2 text-right font-mono text-sm tabular-nums outline-none hover:border-neutral-400 focus-visible:border-neutral-600 focus-visible:ring-1 focus-visible:ring-neutral-600 dark:border-neutral-800 dark:hover:border-neutral-600 dark:focus-visible:border-neutral-400 dark:focus-visible:ring-neutral-400"
             />
           </NumberField.Root>
-          {unit && <span>&nbsp;{unit}</span>}
         </div>
-        <span className="text-xs text-gray-500">{description}</span>
       </div>
-
-      <Slider.Root value={value} onValueChange={onValueChange} min={min} max={max} step={step} largeStep={largeStep}>
-        <Slider.Control className="relative flex h-5 w-full touch-none items-center select-none">
-          <Slider.Track className="h-1 w-full rounded-full bg-gray-700">
-            <Slider.Indicator className={cn('rounded-full', accentClasses.indicator)} />
+      <QuantizedSlider
+        value={value}
+        onValueChange={onValueChange}
+        min={min}
+        max={max}
+        step={step}
+        decimals={decimals}
+        largeStep={largeStep}
+      >
+        <Slider.Control className="relative flex h-6 w-full touch-none items-center select-none">
+          <Slider.Track className="h-1 w-full rounded-full bg-neutral-200 dark:bg-neutral-800">
+            <Slider.Indicator className="rounded-full bg-neutral-500" />
             <Slider.Thumb
-              className={cn(
-                `
-                  size-4 rounded-full border bg-gray-800 shadow-sm outline-none
-                  has-focus-visible:ring-2
-                `,
-                accentClasses.thumb
-              )}
+              className="h-4 w-2 rounded-sm bg-neutral-900 outline-none has-focus-visible:ring-2 has-focus-visible:ring-neutral-600 has-focus-visible:ring-offset-4 has-focus-visible:ring-offset-white dark:bg-neutral-100 dark:has-focus-visible:ring-neutral-400 dark:has-focus-visible:ring-offset-black"
               aria-label={ariaLabel}
             />
           </Slider.Track>
         </Slider.Control>
-      </Slider.Root>
+      </QuantizedSlider>
+      <p className="text-xs/4 text-neutral-500">{description}</p>
     </div>
   );
 };

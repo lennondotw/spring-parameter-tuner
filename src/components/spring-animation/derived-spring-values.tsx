@@ -66,8 +66,8 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
   };
 
   return (
-    <div className={cn('flex w-full flex-col gap-4', className)}>
-      <h4 className="text-sm font-medium text-gray-400">Perceptual Parameters</h4>
+    <div className={cn('flex w-full flex-col gap-3', className)}>
+      <h4 className="text-xs font-medium tracking-wide text-neutral-500">Perceptual parameters</h4>
 
       <ParameterSlider
         ariaLabel="Natural frequency"
@@ -78,7 +78,6 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
         step={PERCEPTUAL_PARAMS.OMEGA.STEP}
         decimals={2}
         description={PERCEPTUAL_PARAMS.OMEGA.DESCRIPTION}
-        accent="purple"
         unit="rad/s"
         onValueChange={handleOmegaChange}
       />
@@ -92,19 +91,18 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
         step={PERCEPTUAL_PARAMS.ZETA.STEP}
         decimals={3}
         description={PERCEPTUAL_PARAMS.ZETA.DESCRIPTION}
-        accent="purple"
         onValueChange={handleZetaChange}
       />
 
       {/* Read-only status */}
       <div className="mt-1 grid grid-cols-2 gap-x-4 text-sm">
         <div className="flex flex-col">
-          <div className="text-gray-500">Type</div>
+          <div className="text-xs text-neutral-400 dark:text-neutral-600">Type</div>
           <div className="font-mono">{dampingTypeLabel}</div>
         </div>
         <div className="flex flex-col">
-          <div className="text-gray-500">Critical damping</div>
-          <div className="font-mono text-gray-300">{derived.criticalDamping.toFixed(2)}</div>
+          <div className="text-xs text-neutral-400 dark:text-neutral-600">Critical damping</div>
+          <div className="font-mono text-neutral-700 dark:text-neutral-300">{derived.criticalDamping.toFixed(2)}</div>
         </div>
       </div>
     </div>
