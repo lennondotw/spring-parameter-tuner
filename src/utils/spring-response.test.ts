@@ -42,3 +42,35 @@ it('refines short curves without changing the start or settled endpoint', () => 
   expect(result.samples[0]).toEqual({ time: 0, value: 0 });
   expect(result.samples.at(-1)).toEqual({ time: result.duration, value: 100 });
 });
+
+it.each([-2000, 2000])('samples a critical response with signed initial velocity %s units/s', (initialVelocity) => {
+  const result = sampleSpringResponse({
+    ...options,
+    stiffness: 400,
+    damping: 40,
+    initialVelocity,
+    initialVelocityMode: 'fixed',
+  });
+  const sample = result.samples.find((sample) => sample.time >= 30);
+  if (!sample) throw new Error('Expected a response sample');
+  const seconds = sample.time / 1000;
+  expect(sample.value).toBeCloseTo(100 + (-100 + (initialVelocity - 2000) * seconds) * Math.exp(-20 * seconds), 10);
+  expect(result.samples.at(-1)?.value).toBe(100);
+});
+
+it('applies zero and toward-target modes consistently to the response curve', () => {
+  expect(sampleSpringResponse({ ...options, initialVelocity: 5000, initialVelocityMode: 'zero' })).toEqual(
+    sampleSpringResponse(options)
+  );
+  expect(sampleSpringResponse({ ...options, initialVelocity: -2000, initialVelocityMode: 'toward-target' })).toEqual(
+    sampleSpringResponse({ ...options, initialVelocity: 2000, initialVelocityMode: 'fixed' })
+  );
+});
+
+it('uses both analytical speed and distance thresholds to settle a critical spring', () => {
+  const result = sampleSpringResponse({ ...options, stiffness: 900, damping: 60, initialVelocity: 2000 });
+  if (result.duration === null) throw new Error('Expected a settled spring');
+  const velocityAt = (time: number) => (2000 + 30000 * time) * Math.exp(-30 * time);
+  expect(velocityAt(result.duration / 1000)).toBeLessThanOrEqual(0.001);
+  expect(velocityAt((result.duration - 1000 / 240) / 1000)).toBeGreaterThan(0.001);
+});

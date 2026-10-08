@@ -1,4 +1,5 @@
-import { spring } from 'popmotion';
+import { spring } from 'framer-motion';
+import { resolveInitialVelocity, type InitialVelocityMode, type InitialVelocityUnit } from './initial-velocity.js';
 
 export interface SpringResponseOptions {
   stiffness: number;
@@ -6,11 +7,21 @@ export interface SpringResponseOptions {
   mass: number;
   restDelta: number;
   restSpeed: number;
+  initialVelocity?: number;
+  initialVelocityMode?: InitialVelocityMode;
+  initialVelocityUnit?: InitialVelocityUnit;
 }
 
-/** Sample the same generator as the live animation, for a 0 → 100 step at rest. */
+/** Sample the live generator for 0 → 100 with the selected launch setting. */
 export function sampleSpringResponse(options: SpringResponseOptions) {
-  const generator = spring({ ...options, from: 0, to: 100, velocity: 0 });
+  const {
+    initialVelocity = 0,
+    initialVelocityMode = 'toward-target',
+    initialVelocityUnit = 'normalized',
+    ...physics
+  } = options;
+  const velocity = resolveInitialVelocity(initialVelocity, initialVelocityMode, 0, 100, initialVelocityUnit);
+  const generator = spring({ ...physics, keyframes: [0, 100], velocity });
   const samples: { time: number; value: number }[] = [];
   const interval = 1000 / 240;
   const limit = 30000;
@@ -26,7 +37,7 @@ export function sampleSpringResponse(options: SpringResponseOptions) {
   // Short, fast springs need more points when stretched across the plot width.
   // Keep settling-time detection at 240 Hz, then refine only the visible curve.
   if (duration !== null && duration > 0 && samples.length < 1025) {
-    const plotGenerator = spring({ ...options, from: 0, to: 100, velocity: 0 });
+    const plotGenerator = spring({ ...physics, keyframes: [0, 100], velocity });
     const refined = Array.from({ length: 1025 }, (_, index) => {
       const time = (index / 1024) * duration;
       return { time, value: plotGenerator.next(time).value };

@@ -195,7 +195,7 @@ it('keeps idle requests uncounted, then records a run and each actual generation
   });
 });
 
-it('records zeroed handoff and the reasons for parameter and threshold changes', () => {
+it('records a default zero start and the reasons for parameter and threshold changes', () => {
   const { result, rerender } = renderHook(useSpringAnimation, { initialProps: options });
   act(() => {
     flush(0);
@@ -207,7 +207,7 @@ it('records zeroed handoff and the reasons for parameter and threshold changes',
     run: 1,
     generation: 2,
     initialVelocity: 0,
-    velocitySource: 'zeroed',
+    velocitySource: 'from-rest',
     restartReasons: ['parameters', 'thresholds', 'handoff'],
   });
 });
@@ -226,4 +226,179 @@ it('does not let an old completion overwrite the replacement status or metadata'
   expect(result.current).toBe(state);
   expect(result.current.status).toBe('running');
   expect(result.current.generation).toBe(2);
+});
+
+it.each([true, false])('launches each new run with configured velocity when handoff is %s', (preserveVelocity) => {
+  const props: UseSpringAnimationOptions = {
+    ...options,
+    preserveVelocity,
+    initialVelocity: -200,
+    initialVelocityMode: 'fixed',
+  };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => {
+    flush(0);
+    latest().sample(0);
+  });
+  expect(latest().getGeneratorVelocity()).toBe(-200);
+  expect(result.current).toMatchObject({ run: 1, generation: 1, initialVelocity: -200, velocitySource: 'configured' });
+  act(() => latest().finish());
+  rerender({ ...props, targetValue: 0 });
+  act(() => {
+    flush(40);
+    latest().sample(0);
+  });
+  expect(result.current).toMatchObject({ run: 2, generation: 1, initialVelocity: -200, velocitySource: 'configured' });
+  expect(latest().getGeneratorVelocity()).toBe(-200);
+});
+
+it.each([true, false])('uses inherited or configured velocity on interruption with handoff %s', (preserveVelocity) => {
+  const props = { ...options, preserveVelocity, initialVelocity: 200 };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => {
+    flush(0);
+    latest().sample(30);
+  });
+  const velocity = result.current.velocity;
+  const configuredVelocity = -2 * result.current.value;
+  rerender({ ...props, targetValue: 0 });
+  act(() => {
+    flush(30);
+    latest().sample(0);
+  });
+  expect(result.current).toMatchObject({
+    run: 1,
+    generation: 2,
+    initialVelocity: preserveVelocity ? velocity : configuredVelocity,
+    velocitySource: preserveVelocity ? 'inherited' : 'configured',
+  });
+  expect(latest().getGeneratorVelocity()).toBe(preserveVelocity ? velocity : configuredVelocity);
+});
+
+it('changes launch velocity without injecting motion, then uses the latest setting for the next run', () => {
+  const props: UseSpringAnimationOptions = {
+    ...options,
+    targetValue: 0,
+    initialVelocity: 200,
+    initialVelocityMode: 'fixed',
+  };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => flush(0));
+  expect(result.current.status).toBe('idle');
+  expect(animations).toHaveLength(0);
+  rerender({ ...props, initialVelocity: -300 });
+  act(() => flush(10));
+  expect(animations).toHaveLength(0);
+  rerender({ ...props, targetValue: 100, initialVelocity: -300 });
+  act(() => {
+    flush(20);
+    latest().sample(30);
+  });
+  const state = result.current;
+  rerender({ ...props, targetValue: 100, initialVelocity: 500 });
+  act(() => flush(50));
+  expect(animations).toHaveLength(1);
+  expect(result.current).toBe(state);
+  expect(result.current.initialVelocity).toBe(-300);
+  act(() => latest().finish());
+  rerender({ ...props, targetValue: 0, initialVelocity: 500 });
+  act(() => flush(60));
+  expect(result.current).toMatchObject({ run: 2, generation: 1, initialVelocity: 500 });
+});
+
+it('resolves toward-target velocity from the current position even after overshooting the old target', () => {
+  const props = { ...options, damping: 0, preserveVelocity: false, initialVelocity: 400 };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => {
+    flush(0);
+    latest().sample(200);
+  });
+  const position = result.current.value;
+  expect(position).toBeGreaterThan(120);
+  rerender({ ...props, targetValue: 120 });
+  act(() => flush(200));
+  expect(result.current).toMatchObject({
+    startValue: position,
+    targetValue: 120,
+    initialVelocity: 4 * (120 - position),
+  });
+});
+
+it('keeps a fixed direction on replacements even when it points away from the new target', () => {
+  const props: UseSpringAnimationOptions = {
+    ...options,
+    preserveVelocity: false,
+    initialVelocity: 200,
+    initialVelocityMode: 'fixed',
+  };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => {
+    flush(0);
+    latest().sample(30);
+  });
+  const position = result.current.value;
+  rerender({ ...props, targetValue: 0 });
+  act(() => flush(30));
+  expect(result.current.initialVelocity).toBe(2 * position);
+});
+
+it('applies mode changes to the next replacement without restarting the active spring', () => {
+  const props = { ...options, preserveVelocity: false, initialVelocity: 200 };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => {
+    flush(0);
+    latest().sample(30);
+  });
+  const state = result.current;
+  rerender({ ...props, initialVelocityMode: 'zero' });
+  act(() => flush(30));
+  expect(animations).toHaveLength(1);
+  expect(result.current).toBe(state);
+  rerender({ ...props, initialVelocityMode: 'zero', targetValue: 0 });
+  act(() => flush(40));
+  expect(result.current).toMatchObject({ generation: 2, initialVelocity: 0, velocitySource: 'from-rest' });
+});
+
+it.each([1, 10, 100])(
+  'keeps the same normalized response for a %s-unit critical spring without overshoot',
+  (distance) => {
+    const props = {
+      ...options,
+      targetValue: distance,
+      stiffness: 900,
+      damping: 60,
+      initialVelocity: 2000,
+      preserveVelocity: false,
+    };
+    const { result } = renderHook(useSpringAnimation, { initialProps: props });
+    act(() => flush(0));
+    expect(result.current.initialVelocity).toBe(20 * distance);
+    for (let time = 0; time <= 400; time += 10) {
+      act(() => {
+        latest().sample(time);
+      });
+      expect(result.current.value).toBeGreaterThanOrEqual(0);
+      expect(result.current.value).toBeLessThanOrEqual(distance);
+      if (time === 40) expect(result.current.value / distance).toBeCloseTo(1 - 1.4 * Math.exp(-1.2), 12);
+    }
+  }
+);
+
+it.each([true, false])('applies absolute units to replacements while honoring handoff %s', (preserveVelocity) => {
+  const props: UseSpringAnimationOptions = { ...options, targetValue: 10, preserveVelocity, initialVelocity: 2000 };
+  const { result, rerender } = renderHook(useSpringAnimation, { initialProps: props });
+  act(() => flush(100));
+  expect(result.current.initialVelocity).toBe(200);
+  act(() => {
+    latest().tick(120);
+  });
+  const velocity = result.current.velocity;
+  rerender({ ...props, initialVelocityUnit: 'absolute' });
+  act(() => flush(120));
+  expect(animations).toHaveLength(1);
+  expect(result.current.initialVelocity).toBe(200);
+  rerender({ ...props, initialVelocityUnit: 'absolute', targetValue: 0 });
+  act(() => flush(120));
+  expect(result.current.initialVelocity).toBe(preserveVelocity ? velocity : -2000);
+  expect(result.current.velocitySource).toBe(preserveVelocity ? 'inherited' : 'configured');
 });

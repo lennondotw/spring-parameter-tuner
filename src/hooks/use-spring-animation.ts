@@ -1,5 +1,10 @@
+import {
+  resolveInitialVelocity,
+  type InitialVelocityMode,
+  type InitialVelocityUnit,
+} from '#src/utils/initial-velocity.js';
 import { cancelFrame, frame, frameData, JSAnimation } from 'framer-motion';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useLayoutEffect, useRef } from 'react';
 import { useStateWithRef } from './use-state-with-ref.js';
 
 export interface UseSpringAnimationOptions {
@@ -9,6 +14,10 @@ export interface UseSpringAnimationOptions {
   mass: number;
   preserveVelocity: boolean;
   initialValue?: number;
+  /** Speed in the selected unit; normalized by default. */
+  initialVelocity?: number;
+  initialVelocityMode?: InitialVelocityMode;
+  initialVelocityUnit?: InitialVelocityUnit;
   restDelta?: number;
   restSpeed?: number;
 }
@@ -24,12 +33,14 @@ export interface SpringAnimationState {
   startValue: number | null;
   targetValue: number;
   initialVelocity: number | null;
-  velocitySource: 'inherited' | 'zeroed' | 'from-rest' | null;
+  velocitySource: 'inherited' | 'from-rest' | 'configured' | null;
   elapsed: number;
   restartReasons: SpringRestartReason[];
 }
 
-type StartedOptions = Required<Omit<UseSpringAnimationOptions, 'initialValue'>>;
+type StartedOptions = Required<
+  Omit<UseSpringAnimationOptions, 'initialValue' | 'initialVelocity' | 'initialVelocityMode' | 'initialVelocityUnit'>
+>;
 function restartReasons(previous: StartedOptions | null, next: StartedOptions): SpringRestartReason[] {
   if (!previous) return ['new-run'];
   const reasons: SpringRestartReason[] = [];
@@ -49,6 +60,9 @@ export function useSpringAnimation({
   mass,
   preserveVelocity,
   initialValue = targetValue,
+  initialVelocity = 0,
+  initialVelocityMode = 'toward-target',
+  initialVelocityUnit = 'normalized',
   restDelta = 0.001,
   restSpeed = 0.001,
 }: UseSpringAnimationOptions): SpringAnimationState {
@@ -67,6 +81,10 @@ export function useSpringAnimation({
   });
   const animationRef = useRef<JSAnimation<number> | null>(null);
   const startedOptionsRef = useRef<StartedOptions | null>(null);
+  // Editing velocity or its mode affects the next start without restarting motion.
+  const readInitialVelocity = useEffectEvent((from: number, target: number) =>
+    resolveInitialVelocity(initialVelocity, initialVelocityMode, from, target, initialVelocityUnit)
+  );
 
   useLayoutEffect(() => {
     const start = () => {
@@ -74,9 +92,10 @@ export function useSpringAnimation({
       // Read both after the old spring's update on the shared frame. Callback
       // arrival times are not animation time and cannot be used to infer velocity.
       const from = latestRef.current.value;
-      const velocity = preserveVelocity && previous ? previous.getGeneratorVelocity() : 0;
+      const inherited = preserveVelocity && previous !== null;
+      const velocity = inherited ? previous.getGeneratorVelocity() : readInitialVelocity(from, targetValue);
       previous?.stop();
-      if (from === targetValue && velocity === 0) {
+      if (from === targetValue && (!previous || velocity === 0)) {
         animationRef.current = null;
         if (previous) setCurrent({ ...latestRef.current, status: 'settled', velocity: 0 });
         return;
@@ -92,7 +111,7 @@ export function useSpringAnimation({
         startValue: from,
         targetValue,
         initialVelocity: velocity,
-        velocitySource: previous ? (preserveVelocity ? 'inherited' : 'zeroed') : 'from-rest',
+        velocitySource: inherited ? 'inherited' : velocity === 0 ? 'from-rest' : 'configured',
         elapsed: 0,
         restartReasons: restartReasons(previous ? startedOptionsRef.current : null, nextOptions),
       };

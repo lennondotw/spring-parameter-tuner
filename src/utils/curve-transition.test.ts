@@ -7,6 +7,8 @@ const initial: CurveDisplayState = {
   logZeta: Math.log1p(0.5),
   logEnd: Math.log(1000),
   logCeiling: Math.log(120),
+  logFloorDepth: 0,
+  initialVelocity: 0,
 };
 
 function expectMonotone(transition: CurveTransition, start: number, target: number) {
@@ -100,5 +102,35 @@ describe('curve transition', () => {
     expect(plot.path).toContain('L380.000,');
     expect(plot.path).not.toMatch(/NaN|Infinity/);
     expect(target.duration).toBeLessThan(plot.end);
+  });
+
+  it.each([-5000, 10000])('fits the complete response with initial velocity %s inside the plot', (initialVelocity) => {
+    const target = createCurveTarget({
+      stiffness: 400,
+      damping: 40,
+      mass: 1,
+      restDelta: 0.001,
+      restSpeed: 0.001,
+      initialVelocity,
+      initialVelocityMode: 'fixed',
+    });
+    const plot = createCurvePath(target.display);
+    const values = plot.path.split(' ').map((command) => Number(command.split(',')[1]));
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(20);
+    expect(Math.max(...values)).toBeLessThanOrEqual(164);
+    if (initialVelocity < 0) expect(plot.floor).toBeLessThan(0);
+    else expect(plot.ceiling).toBeGreaterThan(100);
+    expect(plot.path).not.toBe(createCurvePath({ ...target.display, initialVelocity: 0 }).path);
+  });
+
+  it('preserves displayed velocity and floor-range progress across curve interruptions', () => {
+    const transition = new CurveTransition(initial);
+    transition.retarget({ ...initial, initialVelocity: -5000, logFloorDepth: Math.log1p(100) }, 0);
+    const footprint = transition.sample(40);
+    transition.retarget({ ...initial, initialVelocity: 2000, logFloorDepth: 0 }, 50, footprint);
+    const resumed = transition.sample(50);
+    expect(resumed.position).toEqual(footprint.position);
+    expect(resumed.velocity.initialVelocity).toBe(footprint.velocity.initialVelocity);
+    expect(resumed.velocity.logFloorDepth).toBe(footprint.velocity.logFloorDepth);
   });
 });

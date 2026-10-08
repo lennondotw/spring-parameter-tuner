@@ -3,6 +3,7 @@ import { useCurveTransition } from '#src/hooks/use-curve-transition.js';
 import { useThrottledValue } from '#src/hooks/use-throttled-value.js';
 import { createCurvePath } from '#src/utils/curve-path.js';
 import { createCurveTarget } from '#src/utils/curve-transition.js';
+import { resolveInitialVelocity } from '#src/utils/initial-velocity.js';
 import type { SpringResponseOptions } from '#src/utils/spring-response.js';
 import { memo, useDeferredValue, useMemo } from 'react';
 
@@ -16,9 +17,17 @@ export function ResponseCurve({ options }: { options: SpringResponseOptions }) {
 const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options: SpringResponseOptions }) {
   const target = useMemo(() => createCurveTarget(options), [options]);
   const display = useCurveTransition(target.display);
-  const { path, end, ceiling } = useMemo(() => createCurvePath(display), [display]);
-  const y = (value: number) => 164 - (value / ceiling) * 144;
+  const { path, end, ceiling, floor } = useMemo(() => createCurvePath(display), [display]);
+  const y = (value: number) => 164 - ((value - floor) / (ceiling - floor)) * 144;
   const duration = target.duration;
+  const initialVelocity = resolveInitialVelocity(
+    options.initialVelocity ?? 0,
+    options.initialVelocityMode ?? 'toward-target',
+    0,
+    100,
+    options.initialVelocityUnit
+  );
+  const normalized = options.initialVelocityMode !== 'zero' && options.initialVelocityUnit !== 'absolute';
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
@@ -66,8 +75,11 @@ const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options
         </text>
       </svg>
       <p className="text-xs text-muted-foreground">
-        Response to a 0 → 100 target change from rest. The estimate uses the rest thresholds in Advanced, up to 30 s.
-        Live playback can settle differently depending on its starting position and velocity.
+        Response to a 0 → 100 target change with{' '}
+        {options.initialVelocityMode === 'zero' ? '' : normalized ? 'normalized ' : 'absolute '}initial velocity{' '}
+        {initialVelocity.toFixed(2)}
+        {normalized ? '%/s' : ' units/s'}. The estimate uses the rest thresholds in Advanced, up to 30 s. Live playback
+        can settle differently depending on its starting position and velocity.
       </p>
     </div>
   );

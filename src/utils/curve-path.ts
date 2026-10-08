@@ -1,4 +1,4 @@
-import { spring } from 'popmotion';
+import { spring } from 'framer-motion';
 import type { CurveDisplayState } from './curve-transition.js';
 import { perceptualToPhysical } from './spring-physics.js';
 
@@ -8,10 +8,10 @@ export function createCurvePath(display: CurveDisplayState) {
   const zeta = Math.max(0, Math.expm1(display.logZeta));
   const end = Math.exp(display.logEnd);
   const ceiling = Math.exp(display.logCeiling);
+  const floor = -Math.max(0, Math.expm1(display.logFloorDepth));
   const generator = spring({
-    from: 0,
-    to: 100,
-    velocity: 0,
+    keyframes: [0, 100],
+    velocity: display.initialVelocity,
     ...perceptualToPhysical(omega, zeta),
     mass: 1,
     restDelta: 0,
@@ -24,8 +24,8 @@ export function createCurvePath(display: CurveDisplayState) {
     const u = index / segments;
     const value = generator.next(u * end).value;
     commands.push(
-      `${index === 0 ? 'M' : 'L'}${(20 + u * 360).toFixed(3)},${(164 - (value / ceiling) * 144).toFixed(3)}`
+      `${index === 0 ? 'M' : 'L'}${(20 + u * 360).toFixed(3)},${(164 - ((value - floor) / (ceiling - floor)) * 144).toFixed(3)}`
     );
   }
-  return { path: commands.join(' '), end, ceiling };
+  return { path: commands.join(' '), end, ceiling, floor };
 }
