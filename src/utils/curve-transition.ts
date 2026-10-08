@@ -1,4 +1,5 @@
 import { CURVE_TRANSITION_SPRING, TIME_AXIS_TRANSITION_SPRING } from '#src/constants/interface-springs.js';
+import { resolveInitialVelocity } from './initial-velocity.js';
 import { physicalToPerceptual } from './spring-physics.js';
 import { sampleSpringResponse, type SpringResponseOptions } from './spring-response.js';
 
@@ -7,6 +8,8 @@ export interface CurveDisplayState {
   logZeta: number;
   logEnd: number;
   logCeiling: number;
+  logFloorDepth: number;
+  initialVelocity: number;
 }
 export interface CurveFootprint {
   position: CurveDisplayState;
@@ -16,14 +19,22 @@ export interface CurveFootprint {
 export function settledCurveFootprint(position: CurveDisplayState): CurveFootprint {
   return { position: { ...position }, velocity: { ...zeroVelocity } };
 }
-const keys = ['logOmega', 'logZeta', 'logEnd', 'logCeiling'] as const;
-const zeroVelocity: CurveDisplayState = { logOmega: 0, logZeta: 0, logEnd: 0, logCeiling: 0 };
+const keys = ['logOmega', 'logZeta', 'logEnd', 'logCeiling', 'logFloorDepth', 'initialVelocity'] as const;
+const zeroVelocity: CurveDisplayState = {
+  logOmega: 0,
+  logZeta: 0,
+  logEnd: 0,
+  logCeiling: 0,
+  logFloorDepth: 0,
+  initialVelocity: 0,
+};
 
 /** Predict only at a new target, never from intermediate display parameters. */
 export function createCurveTarget(options: SpringResponseOptions) {
   const { omega, zeta } = physicalToPerceptual(options.stiffness, options.damping, options.mass);
-  const { duration } = sampleSpringResponse(options);
-  const peak = zeta < 1 ? 100 * (1 + Math.exp((-Math.PI * zeta) / Math.sqrt(1 - zeta * zeta))) : 100;
+  const { duration, samples } = sampleSpringResponse(options);
+  const peak = samples.reduce((maximum, sample) => Math.max(maximum, sample.value), 100);
+  const minimum = samples.reduce((minimum, sample) => Math.min(minimum, sample.value), 0);
   return {
     duration,
     display: {
@@ -31,6 +42,14 @@ export function createCurveTarget(options: SpringResponseOptions) {
       logZeta: Math.log1p(zeta),
       logEnd: Math.log(Math.max(duration ?? 30000, 1)),
       logCeiling: Math.log(Math.max(110, peak + 5)),
+      logFloorDepth: Math.log1p(minimum < 0 ? -minimum + 5 : 0),
+      initialVelocity: resolveInitialVelocity(
+        options.initialVelocity ?? 0,
+        options.initialVelocityMode ?? 'toward-target',
+        0,
+        100,
+        options.initialVelocityUnit
+      ),
     },
   };
 }

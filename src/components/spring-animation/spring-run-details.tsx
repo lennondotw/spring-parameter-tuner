@@ -3,7 +3,7 @@ import type { SpringAnimationState, SpringRestartReason } from '#src/hooks/use-s
 import type { FC, ReactNode } from 'react';
 import { SpringStatus } from './spring-status.js';
 
-const sources = { inherited: 'Inherited', zeroed: 'Zeroed', 'from-rest': 'From rest' };
+const sources = { inherited: 'Inherited', 'from-rest': 'From rest', configured: 'Configured' };
 const reasons: Record<SpringRestartReason, string> = {
   'new-run': 'New run',
   target: 'Target changed',

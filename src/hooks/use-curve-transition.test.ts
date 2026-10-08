@@ -5,8 +5,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCurveTransition } from './use-curve-transition.js';
 
 const preference = vi.hoisted(() => ({ reduced: false }));
-vi.mock('framer-motion', () => ({ useReducedMotion: () => preference.reduced }));
-const initial: CurveDisplayState = { logOmega: 2, logZeta: 0.4, logEnd: 7, logCeiling: 5 };
+vi.mock('framer-motion', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('framer-motion')>()),
+  useReducedMotion: () => preference.reduced,
+}));
+const initial: CurveDisplayState = {
+  logOmega: 2,
+  logZeta: 0.4,
+  logEnd: 7,
+  logCeiling: 5,
+  logFloorDepth: 0,
+  initialVelocity: 0,
+};
 let now = 0;
 let nextId = 0;
 let frames = new Map<number, FrameRequestCallback>();
