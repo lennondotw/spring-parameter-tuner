@@ -6,6 +6,7 @@ import { useSpringAnimation } from '#src/hooks/use-spring-animation.js';
 import { useSpringConfig } from '#src/hooks/use-spring-config.js';
 import { useTargetShortcuts } from '#src/hooks/use-target-shortcuts.js';
 import { useThrottledUrlUpdates } from '#src/hooks/use-throttled-url-updates.js';
+import type { InitialVelocityMode, InitialVelocityUnit } from '#src/utils/initial-velocity.js';
 import { normalizeSpring, perceptualToPhysical } from '#src/utils/spring-physics.js';
 import type { FC } from 'react';
 import { useCallback, useMemo, useState } from 'react';
@@ -32,9 +33,23 @@ export const SpringAnimationDemo: FC = () => {
 
   const [restDelta, setRestDelta] = useState(0.001);
   const [restSpeed, setRestSpeed] = useState(0.001);
+  const [initialVelocity, setInitialVelocity] = useState(0);
+  const [initialVelocityMode, setInitialVelocityMode] = useState<InitialVelocityMode>('toward-target');
+  const [initialVelocityUnit, setInitialVelocityUnit] = useState<InitialVelocityUnit>('normalized');
+  const hasInitialVelocity = initialVelocityMode !== 'zero' && initialVelocity !== 0;
+  const effectivePreserveVelocity = preserveVelocity && !hasInitialVelocity;
   const responseOptions = useMemo(
-    () => ({ stiffness, damping, mass, restDelta, restSpeed }),
-    [stiffness, damping, mass, restDelta, restSpeed]
+    () => ({
+      stiffness,
+      damping,
+      mass,
+      restDelta,
+      restSpeed,
+      initialVelocity,
+      initialVelocityMode,
+      initialVelocityUnit,
+    }),
+    [stiffness, damping, mass, restDelta, restSpeed, initialVelocity, initialVelocityMode, initialVelocityUnit]
   );
 
   // Spring animation
@@ -43,8 +58,11 @@ export const SpringAnimationDemo: FC = () => {
     stiffness,
     damping,
     mass,
-    preserveVelocity,
+    preserveVelocity: effectivePreserveVelocity,
     initialValue: DEFAULT_TARGET_VALUE,
+    initialVelocity,
+    initialVelocityMode,
+    initialVelocityUnit,
     restDelta,
     restSpeed,
   });
@@ -69,6 +87,9 @@ export const SpringAnimationDemo: FC = () => {
     setStiffness(defaultSpringParams.stiffness);
     setDamping(defaultSpringParams.damping);
     setMass(defaultSpringParams.mass);
+    setInitialVelocity(0);
+    setInitialVelocityMode('toward-target');
+    setInitialVelocityUnit('normalized');
   };
 
   const handleNormalize = () => {
@@ -80,6 +101,11 @@ export const SpringAnimationDemo: FC = () => {
     setDamping(normalized.damping);
     setMass(normalized.mass);
     updateUrlParams(normalized);
+  };
+
+  const handleInitialVelocityModeChange = (mode: InitialVelocityMode) => {
+    setInitialVelocityMode(mode);
+    if (mode === 'toward-target') setInitialVelocity((value) => Math.abs(value));
   };
 
   // Handle slider value change
@@ -164,6 +190,12 @@ export const SpringAnimationDemo: FC = () => {
           </ModulePanel>
           <ModulePanel persistenceId="advanced" title="Advanced" defaultOpen={false}>
             <AdvancedSettings
+              initialVelocity={initialVelocity}
+              initialVelocityMode={initialVelocityMode}
+              initialVelocityUnit={initialVelocityUnit}
+              onInitialVelocityUnitChange={setInitialVelocityUnit}
+              onInitialVelocityChange={setInitialVelocity}
+              onInitialVelocityModeChange={handleInitialVelocityModeChange}
               restDelta={restDelta}
               restSpeed={restSpeed}
               onRestDeltaChange={setRestDelta}
@@ -182,7 +214,8 @@ export const SpringAnimationDemo: FC = () => {
               currentValue={spring.value}
               onPresetClick={handlePresetClick}
               onTrackClick={handleTrackClick}
-              preserveVelocity={preserveVelocity}
+              preserveVelocity={effectivePreserveVelocity}
+              hasInitialVelocity={hasInitialVelocity}
               onPreserveVelocityChange={setPreserveVelocity}
             />
           </ModulePanel>

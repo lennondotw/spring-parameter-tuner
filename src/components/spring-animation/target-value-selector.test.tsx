@@ -97,3 +97,40 @@ it('coalesces targets per animation frame, flushes release and recovers a missin
   });
   expect(onTrackClick).toHaveBeenCalledTimes(unmountCount);
 });
+
+it('keeps click targets working while disabling moves, including a queued drag update', () => {
+  vi.useFakeTimers();
+  const onTrackClick = vi.fn();
+  const { container, rerender, unmount } = render(
+    <TargetValueSelector targetProgress={0.5} onTrackClick={onTrackClick} dragEnabled={false} />
+  );
+  const track = container.querySelector('.touch-none');
+  if (!track) throw new Error('Missing track');
+  Object.assign(track, { setPointerCapture: vi.fn(), hasPointerCapture: () => false });
+  vi.spyOn(track, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 416 } as DOMRect);
+  vi.spyOn(track, 'clientWidth', 'get').mockReturnValue(416);
+  const pointer = { pointerId: 1, button: 0, buttons: 1, clientY: 0 };
+  fireEvent.pointerDown(track, { ...pointer, clientX: 108 });
+  fireEvent.pointerMove(track, { ...pointer, clientX: 308 });
+  fireEvent.pointerUp(track, { ...pointer, buttons: 0, clientX: 408 });
+  act(() => {
+    vi.advanceTimersToNextFrame();
+  });
+  expect(onTrackClick).toHaveBeenCalledTimes(1);
+  expect(onTrackClick).toHaveBeenLastCalledWith(0.25);
+  rerender(<TargetValueSelector targetProgress={0.25} onTrackClick={onTrackClick} dragEnabled />);
+  fireEvent.pointerDown(track, { ...pointer, clientX: 8 });
+  fireEvent.pointerMove(track, { ...pointer, clientX: 208 });
+  rerender(<TargetValueSelector targetProgress={0} onTrackClick={onTrackClick} dragEnabled={false} />);
+  act(() => {
+    vi.advanceTimersToNextFrame();
+  });
+  fireEvent.pointerMove(track, { ...pointer, buttons: 0, clientX: 408 });
+  expect(onTrackClick).toHaveBeenCalledTimes(2);
+  expect(onTrackClick).toHaveBeenLastCalledWith(0);
+  rerender(<TargetValueSelector targetProgress={0} onTrackClick={onTrackClick} dragEnabled />);
+  fireEvent.pointerDown(track, { ...pointer, clientX: 8 });
+  fireEvent.pointerUp(track, { ...pointer, buttons: 0, clientX: 408 });
+  expect(onTrackClick).toHaveBeenLastCalledWith(1);
+  unmount();
+});

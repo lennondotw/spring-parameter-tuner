@@ -10,15 +10,21 @@ export const HelpText: FC<{ className?: string }> = ({ className }) => {
         motion. Reset restores the default spring parameters.
       </p>
       <p>
-        The response curve shows a 0 → 100 transition from rest. Advanced controls how close and how slow the spring
-        must be before it stops. In the live preview, use the target buttons or click and drag the ruler to interrupt
-        the animation with a new target. The ruler’s edge gutters also accept values below 0 and above 100. Velocity
-        handoff carries momentum into each new target; turn it off to restart with zero velocity.
+        The response curve shows a 0 → 100 transition using the initial velocity in Advanced. Advanced also controls how
+        close and how slow the spring must be before it stops. Normalized initial velocity is a percentage of each
+        spring's start-to-target distance per second, so its relative response is independent of travel distance.
+        Absolute mode uses units per second regardless of distance. Switching units keeps the numeric setting. Direction
+        can be zero, point toward the target, or use a fixed signed direction. In the live preview, use the target
+        buttons or click the ruler to interrupt the animation with a new target. The ruler’s edge gutters also accept
+        values below 0 and above 100. A non-zero initial velocity disables dragging and velocity handoff. Select Zero in
+        Advanced to enable dragging and restore the previous handoff setting. With zero initial velocity, velocity
+        handoff carries momentum into a replacement spring.
       </p>
       <p>
         Focus a number field and use ↑ / ↓ to adjust it, or hold Shift for larger steps. The global keys Q W E R T Y U I
         O P [ trigger targets from 0 to 100 in steps of 10, even with a field focused or the panel collapsed. Share the
-        page URL to share stiffness, damping, and mass; playback targets and rest thresholds stay local.
+        page URL to share stiffness, damping, and mass; playback targets, initial velocity, and rest thresholds stay
+        local.
       </p>
       <div className="flex flex-wrap items-center gap-x-1 gap-y-2 text-subtle-foreground">
         <a
