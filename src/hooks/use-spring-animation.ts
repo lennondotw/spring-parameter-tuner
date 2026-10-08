@@ -1,11 +1,6 @@
-import { animate } from 'popmotion';
-import { useEffect, useRef } from 'react';
+import { cancelFrame, frame, frameData, JSAnimation } from 'framer-motion';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useStateWithRef } from './use-state-with-ref.js';
-import { useVelocityTracker } from './use-velocity-tracker.js';
-
-interface AnimationControls {
-  stop: () => void;
-}
 
 export interface UseSpringAnimationOptions {
   targetValue: number;
@@ -18,10 +13,35 @@ export interface UseSpringAnimationOptions {
   restSpeed?: number;
 }
 
-/**
- * Hook that manages spring animation with velocity preservation support
- * Returns the current animated value
- */
+export type SpringStatus = 'idle' | 'running' | 'settled';
+export type SpringRestartReason = 'new-run' | 'target' | 'parameters' | 'thresholds' | 'handoff';
+export interface SpringAnimationState {
+  status: SpringStatus;
+  value: number;
+  velocity: number;
+  run: number;
+  generation: number;
+  startValue: number | null;
+  targetValue: number;
+  initialVelocity: number | null;
+  velocitySource: 'inherited' | 'zeroed' | 'from-rest' | null;
+  elapsed: number;
+  restartReasons: SpringRestartReason[];
+}
+
+type StartedOptions = Required<Omit<UseSpringAnimationOptions, 'initialValue'>>;
+function restartReasons(previous: StartedOptions | null, next: StartedOptions): SpringRestartReason[] {
+  if (!previous) return ['new-run'];
+  const reasons: SpringRestartReason[] = [];
+  if (previous.targetValue !== next.targetValue) reasons.push('target');
+  if (previous.stiffness !== next.stiffness || previous.damping !== next.damping || previous.mass !== next.mass)
+    reasons.push('parameters');
+  if (previous.restDelta !== next.restDelta || previous.restSpeed !== next.restSpeed) reasons.push('thresholds');
+  if (previous.preserveVelocity !== next.preserveVelocity) reasons.push('handoff');
+  return reasons;
+}
+
+/** Live physics preview, with optional analytical velocity handoff between targets. */
 export function useSpringAnimation({
   targetValue,
   stiffness,
@@ -31,55 +51,90 @@ export function useSpringAnimation({
   initialValue = targetValue,
   restDelta = 0.001,
   restSpeed = 0.001,
-}: UseSpringAnimationOptions): number {
-  const [currentValue, setCurrentValue, latestCurrentValueRef] = useStateWithRef(initialValue);
-  const velocityTracker = useVelocityTracker();
-  const animationRef = useRef<AnimationControls | null>(null);
+}: UseSpringAnimationOptions): SpringAnimationState {
+  const [current, setCurrent, latestRef] = useStateWithRef<SpringAnimationState>({
+    status: 'idle',
+    value: initialValue,
+    velocity: 0,
+    run: 0,
+    generation: 0,
+    startValue: null,
+    targetValue: initialValue,
+    initialVelocity: null,
+    velocitySource: null,
+    elapsed: 0,
+    restartReasons: [],
+  });
+  const animationRef = useRef<JSAnimation<number> | null>(null);
+  const startedOptionsRef = useRef<StartedOptions | null>(null);
 
-  useEffect(() => {
-    if (animationRef.current) {
-      animationRef.current.stop();
-    }
-
-    const initialVelocity = preserveVelocity ? velocityTracker.getVelocity() : 0;
-
-    const animation = animate({
-      from: latestCurrentValueRef.current,
-      to: targetValue,
-      type: 'spring',
-      stiffness,
-      damping,
-      mass,
-      velocity: initialVelocity,
-      restDelta,
-      restSpeed,
-      onUpdate: (value) => {
-        velocityTracker.track(value);
-        setCurrentValue(value);
-      },
-      onComplete: () => {
-        velocityTracker.reset();
-        setCurrentValue(targetValue);
-      },
-    });
-
-    animationRef.current = animation;
-
-    return () => {
-      animation.stop();
+  useLayoutEffect(() => {
+    const start = () => {
+      const previous = animationRef.current;
+      // Read both after the old spring's update on the shared frame. Callback
+      // arrival times are not animation time and cannot be used to infer velocity.
+      const from = latestRef.current.value;
+      const velocity = preserveVelocity && previous ? previous.getGeneratorVelocity() : 0;
+      previous?.stop();
+      if (from === targetValue && velocity === 0) {
+        animationRef.current = null;
+        if (previous) setCurrent({ ...latestRef.current, status: 'settled', velocity: 0 });
+        return;
+      }
+      const nextOptions = { targetValue, stiffness, damping, mass, preserveVelocity, restDelta, restSpeed };
+      // Count actual spring starts, after coalescing requests on the shared frame.
+      const generation: SpringAnimationState = {
+        status: 'running',
+        value: from,
+        velocity,
+        run: latestRef.current.run + (previous ? 0 : 1),
+        generation: previous ? latestRef.current.generation + 1 : 1,
+        startValue: from,
+        targetValue,
+        initialVelocity: velocity,
+        velocitySource: previous ? (preserveVelocity ? 'inherited' : 'zeroed') : 'from-rest',
+        elapsed: 0,
+        restartReasons: restartReasons(previous ? startedOptionsRef.current : null, nextOptions),
+      };
+      const owned = new JSAnimation<number>({
+        type: 'spring',
+        keyframes: [from, targetValue],
+        stiffness,
+        damping,
+        mass,
+        velocity,
+        restDelta,
+        restSpeed,
+        onUpdate: (value: number) => {
+          if (animationRef.current !== owned) return;
+          setCurrent({
+            ...generation,
+            value,
+            velocity: owned.getGeneratorVelocity(),
+            elapsed: Math.max(0, owned.time * 1000),
+          });
+        },
+        onComplete: () => {
+          if (animationRef.current !== owned) return;
+          animationRef.current = null;
+          setCurrent({
+            ...generation,
+            status: 'settled',
+            value: targetValue,
+            velocity: 0,
+            elapsed: Math.max(0, owned.time * 1000),
+          });
+        },
+      });
+      animationRef.current = owned;
+      startedOptionsRef.current = nextOptions;
+      owned.startTime = Math.round(frameData.timestamp);
+      setCurrent(generation);
     };
-  }, [
-    damping,
-    restDelta,
-    restSpeed,
-    latestCurrentValueRef,
-    mass,
-    preserveVelocity,
-    setCurrentValue,
-    stiffness,
-    targetValue,
-    velocityTracker,
-  ]);
+    frame.preRender(start);
+    return () => cancelFrame(start);
+  }, [damping, restDelta, restSpeed, latestRef, mass, preserveVelocity, setCurrent, stiffness, targetValue]);
 
-  return currentValue;
+  useEffect(() => () => animationRef.current?.stop(), []);
+  return current;
 }

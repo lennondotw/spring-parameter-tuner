@@ -15,6 +15,7 @@ import { HelpText } from './help-text.js';
 import { ModulePanel } from './module-panel.js';
 import { ResponseCurve } from './response-curve.js';
 import { SpringParameterControl } from './spring-parameter-control.js';
+import { SpringRunDetails } from './spring-run-details.js';
 
 /**
  * Main component for Spring Animation Demo
@@ -37,7 +38,7 @@ export const SpringAnimationDemo: FC = () => {
   );
 
   // Spring animation
-  const currentValue = useSpringAnimation({
+  const spring = useSpringAnimation({
     targetValue,
     stiffness,
     damping,
@@ -178,12 +179,15 @@ export const SpringAnimationDemo: FC = () => {
             <AnimationPreview
               activePreset={activePreset}
               targetValue={targetValue}
-              currentValue={currentValue}
+              currentValue={spring.value}
               onPresetClick={handlePresetClick}
               onTrackClick={handleTrackClick}
               preserveVelocity={preserveVelocity}
               onPreserveVelocityChange={setPreserveVelocity}
             />
+          </ModulePanel>
+          <ModulePanel persistenceId="spring-details" title="Spring details" defaultOpen={false}>
+            <SpringRunDetails spring={spring} />
           </ModulePanel>
         </div>
       </div>

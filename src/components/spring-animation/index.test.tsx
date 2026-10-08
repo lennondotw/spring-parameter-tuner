@@ -4,7 +4,21 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { SpringAnimationDemo } from './index.js';
 
 const playback = vi.hoisted(() => ({ value: 50 }));
-vi.mock('#src/hooks/use-spring-animation.js', () => ({ useSpringAnimation: () => playback.value }));
+vi.mock('#src/hooks/use-spring-animation.js', () => ({
+  useSpringAnimation: () => ({
+    value: playback.value,
+    status: 'idle',
+    velocity: 0,
+    run: 0,
+    generation: 0,
+    startValue: null,
+    targetValue: 50,
+    initialVelocity: null,
+    velocitySource: null,
+    elapsed: 0,
+    restartReasons: [],
+  }),
+}));
 vi.mock('./response-curve.js', () => ({ ResponseCurve: () => null }));
 // Exercise page-level URL scheduling with deterministic parameter edits.
 vi.mock('./spring-parameter-control.js', () => ({
@@ -73,4 +87,19 @@ it.each(['Normalize', 'Reset'])('%s cancels pending URL writes and omits default
   });
   expect(window.location.search).toBe(expected);
   expect(window.location.hash).toBe('#curve');
+});
+
+it('puts status and diagnostics in a separate collapsed panel', () => {
+  render(<SpringAnimationDemo />);
+  const preview = screen.getByRole('region', { name: 'Live preview' });
+  expect(preview).toHaveTextContent('Animated value');
+  expect(preview).not.toHaveTextContent('Idle');
+  expect(preview).not.toHaveTextContent('Initial velocity');
+  const details = screen.getByRole('button', { name: 'Spring details' });
+  expect(details).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(details);
+  expect(details).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByText('Run / Generation')).toBeVisible();
+  expect(screen.getByText('Initial velocity')).toBeVisible();
+  expect(screen.getByText('Idle')).toBeVisible();
 });
