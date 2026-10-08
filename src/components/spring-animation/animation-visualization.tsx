@@ -36,7 +36,7 @@ export const AnimationVisualization: FC<AnimationVisualizationProps> = ({ value,
         {[MIN_MARK, MAX_MARK].map((mark) => (
           <span
             key={mark}
-            className="absolute top-7 -translate-x-1/2 text-[10px]/3 text-neutral-400 tabular-nums dark:text-neutral-600"
+            className="absolute top-7 -translate-x-1/2 text-[10px]/3 text-subtle-foreground tabular-nums"
             style={{ left: `${((mark - MIN_MARK) / (MAX_MARK - MIN_MARK)) * 100}%` }}
           >
             {mark}

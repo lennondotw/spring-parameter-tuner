@@ -1,4 +1,5 @@
 import { Divider } from '#src/components/divider.js';
+import { SpringHoverButton } from '#src/components/spring-hover-button.js';
 import { SPRING_PARAMS } from '#src/constants/spring-params.js';
 import { cn } from '#src/utils/cn.js';
 import type { FC } from 'react';
@@ -40,7 +41,7 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
 }) => {
   return (
     <div className={cn('flex w-full flex-col gap-3', className)}>
-      <h4 className="text-xs font-medium tracking-wide text-neutral-500">Spring parameters</h4>
+      <h4 className="text-xs font-medium tracking-wide text-muted-foreground">Spring parameters</h4>
 
       <ParameterSlider
         ariaLabel="Stiffness"
@@ -81,23 +82,23 @@ export const SpringParameterControl: FC<SpringParameterControlProps> = ({
 
         <div className="flex items-center gap-2">
           {onNormalize && (
-            <button
+            <SpringHoverButton
               type="button"
               onClick={onNormalize}
               title="Set mass to 1 while preserving the spring response"
-              className="cursor-pointer rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              className="cursor-pointer rounded-md border border-neutral-200 px-2.5 py-1 text-xs font-medium dark:border-neutral-800"
             >
               Normalize
-            </button>
+            </SpringHoverButton>
           )}
           {onReset && (
-            <button
+            <SpringHoverButton
               type="button"
               onClick={onReset}
-              className="cursor-pointer rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              className="cursor-pointer rounded-md border border-neutral-200 px-2.5 py-1 text-xs font-medium dark:border-neutral-800"
             >
               Reset
-            </button>
+            </SpringHoverButton>
           )}
         </div>
       </div>

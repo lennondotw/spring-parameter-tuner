@@ -18,7 +18,7 @@ export const Switch: FC<SwitchProps> = ({ checked, onCheckedChange, label, descr
     <label htmlFor={id} className={cn('flex cursor-pointer items-center justify-between gap-3', className)}>
       <div className="flex flex-col">
         {label && <span className="text-sm font-medium">{label}</span>}
-        {description && <span className="text-xs text-neutral-500">{description}</span>}
+        {description && <span className="text-xs text-muted-foreground">{description}</span>}
       </div>
       <BaseSwitch.Root
         id={id}

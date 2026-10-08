@@ -1,3 +1,4 @@
+import { SpringHoverButton } from '#src/components/spring-hover-button.js';
 import { PANEL_TRANSITION_SPRING } from '#src/constants/interface-springs.js';
 import { usePanelState } from '#src/hooks/use-panel-state.js';
 import { cn } from '#src/utils/cn.js';
@@ -33,15 +34,16 @@ export function ModulePanel({
   const overflowVisible = allowOverflow && open && (fullyExpanded || prefersReducedMotion);
   return (
     <section className="isolate rounded-lg border border-neutral-100 dark:border-neutral-900">
-      <button
+      <SpringHoverButton
         type="button"
+        variant="text"
         aria-expanded={open}
         aria-controls={contentId}
         onClick={() => {
           setFullyExpanded(false);
           setOpen(!open);
         }}
-        className="flex w-full cursor-pointer items-center justify-between rounded-lg px-4 py-3 text-left text-xs text-neutral-600 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+        className="flex w-full cursor-pointer items-center justify-between rounded-lg px-4 py-3 text-left text-xs"
       >
         <span>{title}</span>
         {open ? (
@@ -49,7 +51,7 @@ export function ModulePanel({
         ) : (
           <PlusIcon aria-hidden="true" size={10} className="shrink-0" />
         )}
-      </button>
+      </SpringHoverButton>
       <motion.div
         id={contentId}
         initial={false}

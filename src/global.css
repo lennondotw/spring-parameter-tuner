@@ -10,6 +10,9 @@
 
 @theme {
   --font-title: 'Nunito', var(--font-sans);
+  /* Keep supporting text quiet while giving small type more contrast. */
+  --color-muted-foreground: #666;
+  --color-subtle-foreground: #949494;
 }
 
 html {
@@ -46,5 +49,7 @@ button:focus-visible {
   :root {
     background: #000;
     color: #ededed;
+    --color-muted-foreground: #858585;
+    --color-subtle-foreground: #666;
   }
 }
