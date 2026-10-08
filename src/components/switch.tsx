@@ -5,17 +5,32 @@ import { useId } from 'react';
 
 export interface SwitchProps {
   checked: boolean;
+  disabled?: boolean;
   onCheckedChange: (checked: boolean) => void;
   label?: string;
   description?: string;
   className?: string;
 }
 
-export const Switch: FC<SwitchProps> = ({ checked, onCheckedChange, label, description, className }) => {
+export const Switch: FC<SwitchProps> = ({
+  checked,
+  disabled = false,
+  onCheckedChange,
+  label,
+  description,
+  className,
+}) => {
   const id = useId();
 
   return (
-    <label htmlFor={id} className={cn('flex cursor-pointer items-center justify-between gap-3', className)}>
+    <label
+      htmlFor={id}
+      className={cn(
+        'flex items-center justify-between gap-3',
+        disabled ? 'cursor-default' : 'cursor-pointer',
+        className
+      )}
+    >
       <div className="flex flex-col">
         {label && <span className="text-sm font-medium">{label}</span>}
         {description && <span className="text-xs text-muted-foreground">{description}</span>}
@@ -23,11 +38,12 @@ export const Switch: FC<SwitchProps> = ({ checked, onCheckedChange, label, descr
       <BaseSwitch.Root
         id={id}
         checked={checked}
+        disabled={disabled}
         onCheckedChange={onCheckedChange}
         className={cn(
           `
-            relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full
-            transition-colors outline-none has-focus-visible:ring-2 has-focus-visible:ring-neutral-600 dark:has-focus-visible:ring-neutral-400
+            relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors outline-none
+            has-focus-visible:ring-2 has-focus-visible:ring-neutral-600 data-disabled:cursor-default data-disabled:opacity-70 dark:has-focus-visible:ring-neutral-400
           `,
           checked ? 'bg-neutral-800 dark:bg-neutral-200' : 'bg-neutral-200 dark:bg-neutral-800'
         )}

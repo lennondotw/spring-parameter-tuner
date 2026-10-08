@@ -22,6 +22,7 @@ interface Marker {
  */
 export interface TargetValueSelectorProps {
   targetProgress: number;
+  dragEnabled?: boolean;
   className?: string;
   onTrackClick: (percentage: number) => void;
 }
@@ -29,14 +30,21 @@ export interface TargetValueSelectorProps {
 /**
  * Component for selecting target values using interactive area
  */
-export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick, targetProgress, className }) => {
+export const TargetValueSelector: FC<TargetValueSelectorProps> = ({
+  onTrackClick,
+  targetProgress,
+  dragEnabled = true,
+  className,
+}) => {
   const nextMarkerIdRef = useRef(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
 
   const callbackRef = useRef(onTrackClick);
+  const dragEnabledRef = useRef(dragEnabled);
   useLayoutEffect(() => {
     callbackRef.current = onTrackClick;
-  }, [onTrackClick]);
+    dragEnabledRef.current = dragEnabled;
+  }, [onTrackClick, dragEnabled]);
   const dragRef = useRef<{
     pointerId: number;
     markerId: number;
@@ -46,6 +54,7 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
     progress: number;
     published: number;
     startProgress: number;
+    allowDrag: boolean;
   } | null>(null);
   const { schedule, flush, cancel } = useFrameQueue();
 
@@ -58,7 +67,7 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
   };
   const publish = () => {
     const drag = dragRef.current;
-    if (!drag || drag.progress === drag.published) return;
+    if (!drag || !dragEnabledRef.current || !drag.allowDrag || drag.progress === drag.published) return;
     drag.published = drag.progress;
     callbackRef.current(drag.progress);
   };
@@ -78,13 +87,14 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
       progress,
       published: progress,
       startProgress: targetProgress,
+      allowDrag: dragEnabled,
     };
     setMarkers((previous) => [...previous, { id: markerId, progress, released: false }]);
     callbackRef.current(progress);
   };
   const move = (event: PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag || !dragEnabled || !drag.allowDrag) return;
     const progress = readProgress(event);
     if (progress === null) return;
     // The feedback follows every pointer event, independent of target throttling.
@@ -132,7 +142,7 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
   return (
     <div className={cn('flex w-full flex-col gap-2', className)}>
       <div className="block text-xs font-medium text-neutral-600 dark:text-neutral-400">
-        Click or drag to set a target
+        {dragEnabled ? 'Click or drag to set a target' : 'Click to set a target'}
       </div>
       <div
         className="relative h-12 w-full cursor-pointer touch-none overflow-hidden rounded-md border border-neutral-200 bg-black/3 dark:border-neutral-800 dark:bg-white/5"
@@ -181,6 +191,11 @@ export const TargetValueSelector: FC<TargetValueSelectorProps> = ({ onTrackClick
           ))}
         </AnimatePresence>
       </div>
+      {!dragEnabled && (
+        <p className="text-xs text-muted-foreground">
+          Turn off initial velocity (select Zero in Advanced) to enable dragging.
+        </p>
+      )}
     </div>
   );
 };
