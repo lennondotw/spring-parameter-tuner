@@ -34,7 +34,7 @@ export const SpringAnimationDemo: FC = () => {
   const [restDelta, setRestDelta] = useState(0.001);
   const [restSpeed, setRestSpeed] = useState(0.001);
   const [initialVelocity, setInitialVelocity] = useState(0);
-  const [initialVelocityMode, setInitialVelocityMode] = useState<InitialVelocityMode>('toward-target');
+  const [initialVelocityMode, setInitialVelocityMode] = useState<InitialVelocityMode>('zero');
   const [initialVelocityUnit, setInitialVelocityUnit] = useState<InitialVelocityUnit>('normalized');
   const hasInitialVelocity = initialVelocityMode !== 'zero' && initialVelocity !== 0;
   const effectivePreserveVelocity = preserveVelocity && !hasInitialVelocity;
@@ -88,7 +88,7 @@ export const SpringAnimationDemo: FC = () => {
     setDamping(defaultSpringParams.damping);
     setMass(defaultSpringParams.mass);
     setInitialVelocity(0);
-    setInitialVelocityMode('toward-target');
+    setInitialVelocityMode('zero');
     setInitialVelocityUnit('normalized');
   };
 
