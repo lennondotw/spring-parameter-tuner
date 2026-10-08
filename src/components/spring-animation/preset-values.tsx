@@ -1,3 +1,4 @@
+import { SpringHoverButton } from '#src/components/spring-hover-button.js';
 import { PRESET_SHORTCUTS, PRESET_VALUES } from '#src/constants/marks.js';
 import { cn } from '#src/utils/cn.js';
 import type { FC } from 'react';
@@ -18,34 +19,31 @@ export const PresetValues: FC<PresetValuesProps> = ({ activePreset, onPresetClic
   return (
     <div className={cn('@container/presets flex w-full flex-col gap-2', className)}>
       <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">Target value triggers</div>
-      <div className="grid grid-cols-6 gap-1 @min-[28rem]/presets:grid-cols-11">
+      <div className="grid grid-cols-6 gap-(--preset-gap) [--preset-gap:--spacing(1)] @min-[28rem]/presets:grid-cols-11">
         {PRESET_VALUES.map((value, index) => {
           // Calculate corresponding keyboard key
           const keyText = PRESET_SHORTCUTS[index] ?? '?';
 
           return (
-            <button
+            <SpringHoverButton
               key={value}
               aria-keyshortcuts={keyText}
               aria-pressed={activePreset === value}
+              selected={activePreset === value}
               onClick={() => onPresetClick(value)}
-              className={`
-                relative min-w-0 cursor-pointer flex-col items-center gap-1 rounded-md border border-neutral-200 py-2 text-xs font-medium
-                text-nowrap transition-colors outline-none dark:border-neutral-800
-                ${index % 2 === 0 ? 'flex' : 'hidden @min-[28rem]/presets:flex'}
-                ${
-                  activePreset === value
-                    ? 'bg-neutral-800 text-white dark:bg-neutral-200 dark:text-black'
-                    : `
-                      bg-neutral-50 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-950
-                      dark:text-neutral-400 dark:hover:bg-neutral-800
-                    `
-                }
-              `}
+              className={cn(
+                `
+                  relative min-w-0 cursor-pointer flex-col items-center gap-1 rounded-md border border-neutral-200 py-2 text-xs font-medium
+                  text-nowrap outline-none dark:border-neutral-800
+                `,
+                index % 2 === 0 ? 'flex' : 'hidden @min-[28rem]/presets:flex'
+              )}
             >
+              {/* Absolute insets start inside the 1px border; compensate to expand only horizontally by gap / 2. */}
+              <span aria-hidden="true" className="absolute -inset-x-[calc(var(--preset-gap)/2+1px)] -inset-y-px" />
               <span>{value}</span>
-              <KeyboardKey keyText={keyText} className="text-neutral-500" />
-            </button>
+              <KeyboardKey keyText={keyText} className="text-muted-foreground" />
+            </SpringHoverButton>
           );
         })}
       </div>

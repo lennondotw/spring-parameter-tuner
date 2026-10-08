@@ -25,7 +25,7 @@ export function AdvancedSettings({
         value={restSpeed}
         onChange={onRestSpeedChange}
       />
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-muted-foreground">
         The spring stops when both thresholds are met. Smaller values take longer to settle.
       </p>
     </div>
@@ -47,7 +47,7 @@ function Threshold({
     <div className="flex items-center justify-between gap-3">
       <div>
         <div className="text-sm text-neutral-700 dark:text-neutral-300">{label}</div>
-        <p className="text-xs text-neutral-500">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       <NumberField.Root
         value={value}

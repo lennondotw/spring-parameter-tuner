@@ -23,7 +23,7 @@ export function AnimationPreview({
 }: AnimationPreviewProps) {
   return (
     <section className="flex flex-col gap-5" aria-label="Live preview">
-      <h2 className="flex h-7 items-center text-xs font-medium tracking-wide text-neutral-500">Live preview</h2>
+      <h2 className="flex h-7 items-center text-xs font-medium tracking-wide text-muted-foreground">Live preview</h2>
       <div className="flex flex-col gap-6">
         <PreviewTrack label="Target value" value={targetValue} />
         <PreviewTrack label="Animated value" value={currentValue} />
@@ -34,8 +34,8 @@ export function AnimationPreview({
       <Switch
         checked={preserveVelocity}
         onCheckedChange={onPreserveVelocityChange}
-        label="Preserve velocity"
-        description="Keep momentum when the target changes"
+        label="Velocity handoff"
+        description="Carry the current velocity into the next spring."
       />
     </section>
   );

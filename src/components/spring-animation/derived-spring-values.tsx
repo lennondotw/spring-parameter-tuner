@@ -67,7 +67,7 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
 
   return (
     <div className={cn('flex w-full flex-col gap-3', className)}>
-      <h4 className="text-xs font-medium tracking-wide text-neutral-500">Perceptual parameters</h4>
+      <h4 className="text-xs font-medium tracking-wide text-muted-foreground">Perceptual parameters</h4>
 
       <ParameterSlider
         ariaLabel="Natural frequency"
@@ -97,11 +97,11 @@ export const DerivedSpringValues: FC<DerivedSpringValuesProps> = ({
       {/* Read-only status */}
       <div className="mt-1 grid grid-cols-2 gap-x-4 text-sm">
         <div className="flex flex-col">
-          <div className="text-xs text-neutral-400 dark:text-neutral-600">Type</div>
+          <div className="text-xs text-subtle-foreground">Type</div>
           <div className="font-mono">{dampingTypeLabel}</div>
         </div>
         <div className="flex flex-col">
-          <div className="text-xs text-neutral-400 dark:text-neutral-600">Critical damping</div>
+          <div className="text-xs text-subtle-foreground">Critical damping</div>
           <div className="font-mono text-neutral-700 dark:text-neutral-300">{derived.criticalDamping.toFixed(2)}</div>
         </div>
       </div>

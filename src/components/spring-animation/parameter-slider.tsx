@@ -41,7 +41,7 @@ export const ParameterSlider: FC<ParameterSliderProps> = ({
       <div className="flex items-center justify-between gap-3 text-sm">
         <span className="text-neutral-700 dark:text-neutral-300">{label}</span>
         <div className="flex items-center gap-2">
-          {unit && <span className="text-xs text-neutral-500">{unit}</span>}
+          {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
           <NumberField.Root
             value={value}
             onValueChange={handleNumberChange}
@@ -78,7 +78,7 @@ export const ParameterSlider: FC<ParameterSliderProps> = ({
           </Slider.Track>
         </Slider.Control>
       </QuantizedSlider>
-      <p className="text-xs/4 text-neutral-500">{description}</p>
+      <p className="text-xs/4 text-muted-foreground">{description}</p>
     </div>
   );
 };

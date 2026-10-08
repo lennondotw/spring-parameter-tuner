@@ -22,7 +22,7 @@ const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-neutral-500">Estimated settling time</span>
+        <span className="text-xs text-muted-foreground">Estimated settling time</span>
         <span className="font-mono text-sm">{duration === null ? '> 30 s' : `${(duration / 1000).toFixed(3)} s`}</span>
       </div>
       <svg
@@ -58,14 +58,14 @@ const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <text x="20" y="186" className="fill-neutral-500" fontSize="10">
+        <text x="20" y="186" className="fill-muted-foreground" fontSize="10">
           0 s
         </text>
-        <text x="380" y="186" textAnchor="end" className="fill-neutral-500" fontSize="10">
+        <text x="380" y="186" textAnchor="end" className="fill-muted-foreground" fontSize="10">
           {(end / 1000).toFixed(2)} s
         </text>
       </svg>
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-muted-foreground">
         Response to a 0 → 100 target change from rest. The estimate uses the rest thresholds in Advanced, up to 30 s.
         Live playback can settle differently depending on its starting position and velocity.
       </p>
