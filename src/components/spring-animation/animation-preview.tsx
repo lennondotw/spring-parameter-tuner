@@ -9,7 +9,6 @@ interface AnimationPreviewProps extends Omit<PresetValuesProps, 'className'> {
   currentValue: number;
   onTrackClick: (percentage: number) => void;
   preserveVelocity: boolean;
-  hasInitialVelocity: boolean;
   onPreserveVelocityChange: (value: boolean) => void;
 }
 
@@ -20,7 +19,6 @@ export function AnimationPreview({
   onPresetClick,
   onTrackClick,
   preserveVelocity,
-  hasInitialVelocity,
   onPreserveVelocityChange,
 }: AnimationPreviewProps) {
   return (
@@ -31,21 +29,16 @@ export function AnimationPreview({
         <PreviewTrack label="Animated value" value={currentValue} />
       </div>
       <PresetValues activePreset={activePreset} onPresetClick={onPresetClick} />
-      <TargetValueSelector
-        targetProgress={targetValue / 100}
-        onTrackClick={onTrackClick}
-        dragEnabled={!hasInitialVelocity}
-      />
+      <TargetValueSelector targetProgress={targetValue / 100} onTrackClick={onTrackClick} />
       <Divider />
       <Switch
         checked={preserveVelocity}
-        disabled={hasInitialVelocity}
         onCheckedChange={onPreserveVelocityChange}
         label="Velocity handoff"
         description={
-          hasInitialVelocity
-            ? 'Not supported with a non-zero initial velocity.'
-            : 'Carry the current velocity into the next spring.'
+          preserveVelocity
+            ? 'Inherit actual velocity while running, without rescaling. Otherwise, use the setting in Advanced.'
+            : 'Use the setting in Advanced each time. Toward target scales speed to the remaining distance.'
         }
       />
     </section>

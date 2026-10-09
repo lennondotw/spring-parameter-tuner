@@ -24,10 +24,8 @@ const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options
     options.initialVelocity ?? 0,
     options.initialVelocityMode ?? 'toward-target',
     0,
-    100,
-    options.initialVelocityUnit
+    100
   );
-  const normalized = options.initialVelocityMode !== 'zero' && options.initialVelocityUnit !== 'absolute';
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
@@ -75,11 +73,10 @@ const ResponseCurvePlot = memo(function ResponseCurvePlot({ options }: { options
         </text>
       </svg>
       <p className="text-xs text-muted-foreground">
-        Response to a 0 → 100 target change with{' '}
-        {options.initialVelocityMode === 'zero' ? '' : normalized ? 'normalized ' : 'absolute '}initial velocity{' '}
-        {initialVelocity.toFixed(2)}
-        {normalized ? '%/s' : ' units/s'}. The estimate uses the rest thresholds in Advanced, up to 30 s. Live playback
-        can settle differently depending on its starting position and velocity.
+        Response to a 0 → 100 target change{' '}
+        {initialVelocity === 0 ? 'from rest' : `with initial speed ${initialVelocity.toFixed(2)}%/s toward the target`}.
+        The estimate uses the rest thresholds in Advanced, up to 30 s. Live playback may differ when it starts elsewhere
+        or inherits velocity.
       </p>
     </div>
   );
