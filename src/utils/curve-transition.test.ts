@@ -104,6 +104,19 @@ describe('curve transition', () => {
     expect(target.duration).toBeLessThan(plot.end);
   });
 
+  it('keeps a slow critical response smooth through the default generator stopping thresholds', () => {
+    const target = createCurveTarget({ stiffness: 1, damping: 2, mass: 1, restDelta: 0.001, restSpeed: 0.001 });
+    const plot = createCurvePath(target.display);
+    const points = plot.path.split(' ').map((command) => command.slice(1).split(',').map(Number));
+    for (const [index, point] of points.entries()) {
+      const seconds = (index / (points.length - 1)) * (plot.end / 1000);
+      if (seconds < 5) continue;
+      const value = 100 * (1 - (1 + seconds) * Math.exp(-seconds));
+      const expectedY = 164 - ((value - plot.floor) / (plot.ceiling - plot.floor)) * 144;
+      expect(point[1]).toBeCloseTo(expectedY, 3);
+    }
+  });
+
   it.each([-5000, 10000])('fits the complete response with initial velocity %s inside the plot', (initialVelocity) => {
     const target = createCurveTarget({
       stiffness: 400,

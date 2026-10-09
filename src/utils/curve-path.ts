@@ -2,7 +2,11 @@ import { spring } from 'framer-motion';
 import type { CurveDisplayState } from './curve-transition.js';
 import { perceptualToPhysical } from './spring-physics.js';
 
-/** Sample the untruncated response across the CURRENT window, not the target window. */
+/**
+ * Draw the continuous analytical response across the current display window.
+ * User settling thresholds determine the time-axis estimate, not when the plotted
+ * response snaps to the target; a loose threshold can leave the endpoint short of it.
+ */
 export function createCurvePath(display: CurveDisplayState) {
   const omega = Math.exp(display.logOmega);
   const zeta = Math.max(0, Math.expm1(display.logZeta));
@@ -14,8 +18,10 @@ export function createCurvePath(display: CurveDisplayState) {
     velocity: display.initialVelocity,
     ...perceptualToPhysical(omega, zeta),
     mass: 1,
-    restDelta: 0,
-    restSpeed: 0,
+    // Zero is treated as unset by Motion and falls back to default stop thresholds,
+    // which would snap the plotted response to the target prematurely.
+    restDelta: Number.MIN_VALUE,
+    restSpeed: Number.MIN_VALUE,
   });
   // Enough samples for the plot width, with extra density for oscillatory windows.
   const segments = Math.min(8192, Math.max(1024, Math.ceil((end / 1000) * omega * 8)));
