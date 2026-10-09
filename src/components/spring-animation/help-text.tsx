@@ -11,14 +11,16 @@ export const HelpText: FC<{ className?: string }> = ({ className }) => {
       </p>
       <p>
         The response curve shows a 0 → 100 transition using the initial velocity in Advanced. Advanced also controls how
-        close and how slow the spring must be before it stops. Normalized initial velocity is a percentage of each
-        spring's start-to-target distance per second, so its relative response is independent of travel distance.
-        Absolute mode uses units per second regardless of distance. Switching units keeps the numeric setting. Direction
-        can be zero, point toward the target, or use a fixed signed direction. In the live preview, use the target
-        buttons or click the ruler to interrupt the animation with a new target. The ruler’s edge gutters also accept
-        values below 0 and above 100. A non-zero initial velocity disables dragging and velocity handoff. Select Zero in
-        Advanced to enable dragging and restore the previous handoff setting. With zero initial velocity, velocity
-        handoff carries momentum into a replacement spring.
+        close and how slow the spring must be before it stops. Choose Zero to start from rest, or Toward target to set
+        an initial speed as a percentage of the distance from the current animated value to the new target per second.
+        For example, 1000%/s over a remaining distance of 10 units starts at 100 units/s, toward the target. Without
+        inherited velocity, the relative response is independent of travel distance. In the live preview, use the target
+        buttons or click or drag the ruler to change the target. The ruler’s edge gutters also accept values below 0 and
+        above 100. With velocity handoff on, changing a target during motion inherits the current actual velocity,
+        including its direction, without rescaling for the new distance. The first spring, or a spring started after the
+        previous one settles, uses the initial velocity in Advanced. With handoff off, each new spring uses that
+        setting, based on the current animated value and new target. Releasing the ruler keeps the final target without
+        restarting the spring.
       </p>
       <p>
         Focus a number field and use ↑ / ↓ to adjust it, or hold Shift for larger steps. The global keys Q W E R T Y U I

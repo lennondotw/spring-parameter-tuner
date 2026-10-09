@@ -7,6 +7,12 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { SpringAnimationDemo } from './index.js';
 
 const playback = vi.hoisted(() => ({ value: 50, preserveVelocity: true }));
+vi.mock('framer-motion', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('framer-motion')>();
+  // Decorative ruler markers do not participate in the page's target/handoff contract.
+  // Avoid happy-dom's rejected WAAPI cancellation promises during pointer-release cleanup.
+  return { ...actual, AnimatePresence: () => null };
+});
 vi.mock('#src/hooks/use-spring-animation.js', () => ({
   useSpringAnimation: (options: { preserveVelocity: boolean }) => {
     playback.preserveVelocity = options.preserveVelocity;
@@ -28,13 +34,7 @@ vi.mock('#src/hooks/use-spring-animation.js', () => ({
 vi.mock('./response-curve.js', () => ({
   ResponseCurve: ({ options }: { options: SpringResponseOptions }) => (
     <output aria-label="Curve initial velocity">
-      {resolveInitialVelocity(
-        options.initialVelocity ?? 0,
-        options.initialVelocityMode ?? 'toward-target',
-        0,
-        100,
-        options.initialVelocityUnit
-      )}
+      {resolveInitialVelocity(options.initialVelocity ?? 0, options.initialVelocityMode ?? 'toward-target', 0, 100)}
     </output>
   ),
 }));
@@ -124,142 +124,102 @@ it('puts status and diagnostics in a separate collapsed panel', () => {
   expect(screen.getByText('Idle')).toBeVisible();
 });
 
-it('allows signed initial velocity with handoff disabled, updates the curve, and resets independently of Normalize', () => {
+it('offers only Zero and normalized Toward target, updates the curve, and resets independently of Normalize', () => {
   render(<SpringAnimationDemo />);
   fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
-  fireEvent.click(screen.getByRole('switch', { name: /Velocity handoff/ }));
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  const input = screen.getByLabelText('Initial velocity value');
-  expect(input).toBeEnabled();
-  fireEvent.change(input, { target: { value: '-200' } });
+  const modes = screen.getByRole('radiogroup', { name: 'Initial velocity mode' });
+  expect(within(modes).getAllByRole('radio')).toHaveLength(2);
+  expect(screen.queryByText('Direction')).not.toBeInTheDocument();
+  expect(screen.queryByText('Speed units')).not.toBeInTheDocument();
+  expect(screen.queryByRole('radio', { name: 'Fixed direction' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('radio', { name: 'Absolute' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
+  const input = screen.getByLabelText('Initial speed value');
+  fireEvent.change(input, { target: { value: '2000' } });
   fireEvent.blur(input);
-  expect(input).toHaveValue('-200');
-  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('-200');
+  expect(input).toHaveValue('2000');
+  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('2000');
+  expect(screen.getByText(/Percent of the distance from the current animated value to the target/)).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Normalize' }));
-  expect(input).toHaveValue('-200');
+  expect(input).toHaveValue('2000');
   fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-  expect(screen.queryByLabelText('Initial velocity value')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Initial speed value')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('0');
   expect(screen.getByRole('radio', { name: 'Zero' })).toHaveAttribute('aria-checked', 'true');
 });
 
-it('uses the requested slider ranges, hides it in zero mode, and retains the value when switching back', () => {
+it('uses a nonnegative speed slider, hides it in Zero, and retains its value when switching back', () => {
   render(<SpringAnimationDemo />);
   fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
   fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
-  let slider = screen.getByRole('slider', { name: 'Initial velocity' });
+  const slider = screen.getByRole('slider', { name: 'Initial speed' });
   expect(slider).toHaveAttribute('min', '0');
   expect(slider).toHaveAttribute('max', '10000');
   fireEvent.keyDown(slider, { key: 'End' });
   expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('10000');
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  slider = screen.getByRole('slider', { name: 'Initial velocity' });
-  expect(slider).toHaveAttribute('min', '-10000');
-  expect(slider).toHaveAttribute('max', '10000');
-  fireEvent.keyDown(slider, { key: 'Home' });
-  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('-10000');
   fireEvent.click(screen.getByRole('radio', { name: 'Zero' }));
-  expect(screen.queryByRole('slider', { name: 'Initial velocity' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('slider', { name: 'Initial speed' })).not.toBeInTheDocument();
+  expect(screen.getByText('Initial velocity is 0 units/s.')).toBeVisible();
   expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('0');
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByLabelText('Initial velocity value')).toHaveValue('-10000');
   fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
-  expect(screen.getByLabelText('Initial velocity value')).toHaveValue('10000');
+  expect(screen.getByLabelText('Initial speed value')).toHaveValue('10000');
 });
 
-it('switches units independently of direction and value, preserves on Normalize, and resets to Normalized', () => {
+it.each([true, false])('allows nonzero initial speed and ruler dragging with handoff %s', async (handoffEnabled) => {
   render(<SpringAnimationDemo />);
   fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByRole('radio', { name: 'Normalized' })).toHaveAttribute('aria-checked', 'true');
-  const input = screen.getByLabelText('Initial velocity value');
-  fireEvent.change(input, { target: { value: '-2000' } });
+  const handoff = screen.getByRole('switch', { name: /Velocity handoff/ });
+  if (!handoffEnabled) await userEvent.click(handoff);
+  fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
+  const input = screen.getByLabelText('Initial speed value');
+  fireEvent.change(input, { target: { value: '2000' } });
   fireEvent.blur(input);
-  fireEvent.click(screen.getByRole('radio', { name: 'Absolute' }));
-  expect(screen.getByRole('radio', { name: 'Fixed direction' })).toHaveAttribute('aria-checked', 'true');
-  expect(input).toHaveValue('-2000');
-  expect(
-    screen.getByText('Absolute speed in units per second. Positive moves right; negative moves left.')
-  ).toBeVisible();
-  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('-2000');
-  fireEvent.click(screen.getByRole('button', { name: 'Normalize' }));
-  expect(screen.getByRole('radio', { name: 'Absolute' })).toHaveAttribute('aria-checked', 'true');
+  expect(handoff).not.toHaveAttribute('aria-disabled', 'true');
+  if (handoffEnabled) expect(handoff).toBeChecked();
+  else expect(handoff).not.toBeChecked();
+  expect(playback.preserveVelocity).toBe(handoffEnabled);
+  expect(screen.getByText('Click or drag to set a target')).toBeVisible();
+  expect(screen.queryByText('Not supported with a non-zero initial velocity.')).not.toBeInTheDocument();
+  const preview = screen.getByRole('region', { name: 'Live preview' });
+  const track = preview.querySelector('.touch-none');
+  if (!track) throw new Error('Missing ruler');
+  Object.assign(track, { setPointerCapture: vi.fn(), hasPointerCapture: () => false });
+  vi.spyOn(track, 'clientWidth', 'get').mockReturnValue(416);
+  vi.spyOn(track, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 416 } as DOMRect);
+  vi.useFakeTimers();
+  const pointer = { pointerId: 1, button: 0, buttons: 1, clientY: 0 };
+  fireEvent.pointerDown(track, { ...pointer, clientX: 108 });
+  expect(preview).toHaveTextContent('Target value25.00');
+  fireEvent.pointerMove(track, { ...pointer, clientX: 308 });
+  act(() => {
+    vi.advanceTimersToNextFrame();
+  });
+  expect(preview).toHaveTextContent('Target value75.00');
+  fireEvent.pointerUp(track, { ...pointer, buttons: 0, clientX: 308 });
+  expect(preview).toHaveTextContent('Target value75.00');
+  expect(playback.preserveVelocity).toBe(handoffEnabled);
+  vi.useRealTimers();
+  await userEvent.click(handoff);
+  expect(playback.preserveVelocity).toBe(!handoffEnabled);
   fireEvent.click(screen.getByRole('radio', { name: 'Zero' }));
-  expect(screen.getByText('Initial velocity is 0 units/s.')).toBeVisible();
-  expect(screen.queryByRole('slider', { name: 'Initial velocity' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('radiogroup', { name: 'Initial velocity units' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByRole('radio', { name: 'Absolute' })).toHaveAttribute('aria-checked', 'true');
-  fireEvent.click(screen.getByRole('radio', { name: 'Normalized' }));
-  fireEvent.click(screen.getByRole('radio', { name: 'Zero' }));
-  expect(screen.getByText('Initial velocity is 0 units/s.')).toBeVisible();
-  expect(screen.queryByRole('radiogroup', { name: 'Initial velocity units' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByLabelText('Initial velocity value')).toHaveValue('-2000');
-  fireEvent.click(screen.getByRole('radio', { name: 'Absolute' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-  expect(screen.getByRole('radio', { name: 'Zero' })).toHaveAttribute('aria-checked', 'true');
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByRole('radio', { name: 'Normalized' })).toHaveAttribute('aria-checked', 'true');
-  expect(screen.getByLabelText('Initial velocity value')).toHaveValue('0');
+  expect(playback.preserveVelocity).toBe(!handoffEnabled);
 });
-
-it.each(['Toward target', 'Fixed direction'])(
-  'disables handoff and drag with nonzero %s speed and restores the previous handoff preference',
-  async (direction) => {
-    render(<SpringAnimationDemo />);
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
-    const handoff = screen.getByRole('switch', { name: /Velocity handoff/ });
-    expect(handoff).toBeChecked();
-    expect(handoff).not.toHaveAttribute('aria-disabled', 'true');
-    fireEvent.click(screen.getByRole('radio', { name: direction }));
-    const input = screen.getByLabelText('Initial velocity value');
-    fireEvent.change(input, { target: { value: direction === 'Fixed direction' ? '-2000' : '2000' } });
-    fireEvent.blur(input);
-    expect(handoff).toHaveAttribute('aria-disabled', 'true');
-    await userEvent.click(handoff);
-    expect(handoff).not.toBeChecked();
-    expect(playback.preserveVelocity).toBe(false);
-    expect(screen.getByText('Not supported with a non-zero initial velocity.')).toBeVisible();
-    expect(screen.getByText('Click to set a target')).toBeVisible();
-    expect(screen.queryByText('Click or drag to set a target')).not.toBeInTheDocument();
-    expect(screen.getByText('Turn off initial velocity (select Zero in Advanced) to enable dragging.')).toBeVisible();
-    fireEvent.click(screen.getByRole('radio', { name: 'Absolute' }));
-    expect(handoff).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.click(screen.getByRole('radio', { name: 'Zero' }));
-    expect(handoff).not.toHaveAttribute('aria-disabled', 'true');
-    expect(handoff).toBeChecked();
-    expect(playback.preserveVelocity).toBe(true);
-    expect(screen.getByText('Click or drag to set a target')).toBeVisible();
-    await userEvent.click(handoff);
-    fireEvent.click(screen.getByRole('radio', { name: direction }));
-    expect(handoff).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.change(screen.getByLabelText('Initial velocity value'), { target: { value: '0' } });
-    fireEvent.blur(screen.getByLabelText('Initial velocity value'));
-    expect(handoff).not.toHaveAttribute('aria-disabled', 'true');
-    expect(handoff).not.toBeChecked();
-    expect(playback.preserveVelocity).toBe(false);
-  }
-);
 
 it('defaults to Zero and clears initial velocity settings on a fresh mount', () => {
   const { unmount } = render(<SpringAnimationDemo />);
   fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
   expect(screen.getByRole('radio', { name: 'Zero' })).toHaveAttribute('aria-checked', 'true');
-  expect(screen.queryByRole('radiogroup', { name: 'Initial velocity units' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('slider', { name: 'Initial velocity' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  fireEvent.click(screen.getByRole('radio', { name: 'Absolute' }));
-  const input = screen.getByLabelText('Initial velocity value');
-  fireEvent.change(input, { target: { value: '-2000' } });
+  expect(screen.queryByRole('slider', { name: 'Initial speed' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
+  const input = screen.getByLabelText('Initial speed value');
+  fireEvent.change(input, { target: { value: '2000' } });
   fireEvent.blur(input);
-  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('-2000');
+  expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('2000');
   unmount();
   render(<SpringAnimationDemo />);
   expect(screen.getByRole('radio', { name: 'Zero' })).toHaveAttribute('aria-checked', 'true');
   expect(screen.getByLabelText('Curve initial velocity')).toHaveTextContent('0');
   expect(screen.getByRole('switch', { name: /Velocity handoff/ })).not.toHaveAttribute('aria-disabled', 'true');
-  fireEvent.click(screen.getByRole('radio', { name: 'Fixed direction' }));
-  expect(screen.getByRole('radio', { name: 'Normalized' })).toHaveAttribute('aria-checked', 'true');
-  expect(screen.getByLabelText('Initial velocity value')).toHaveValue('0');
+  fireEvent.click(screen.getByRole('radio', { name: 'Toward target' }));
+  expect(screen.getByLabelText('Initial speed value')).toHaveValue('0');
 });

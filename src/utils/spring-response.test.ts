@@ -43,13 +43,12 @@ it('refines short curves without changing the start or settled endpoint', () => 
   expect(result.samples.at(-1)).toEqual({ time: result.duration, value: 100 });
 });
 
-it.each([-2000, 2000])('samples a critical response with signed initial velocity %s units/s', (initialVelocity) => {
+it.each([2000, 5000])('samples a critical response with normalized initial speed %s percent/s', (initialVelocity) => {
   const result = sampleSpringResponse({
     ...options,
     stiffness: 400,
     damping: 40,
     initialVelocity,
-    initialVelocityMode: 'fixed',
   });
   const sample = result.samples.find((sample) => sample.time >= 30);
   if (!sample) throw new Error('Expected a response sample');
@@ -58,12 +57,9 @@ it.each([-2000, 2000])('samples a critical response with signed initial velocity
   expect(result.samples.at(-1)?.value).toBe(100);
 });
 
-it('applies zero and toward-target modes consistently to the response curve', () => {
+it('Zero overrides the configured speed in the response curve', () => {
   expect(sampleSpringResponse({ ...options, initialVelocity: 5000, initialVelocityMode: 'zero' })).toEqual(
     sampleSpringResponse(options)
-  );
-  expect(sampleSpringResponse({ ...options, initialVelocity: -2000, initialVelocityMode: 'toward-target' })).toEqual(
-    sampleSpringResponse({ ...options, initialVelocity: 2000, initialVelocityMode: 'fixed' })
   );
 });
 

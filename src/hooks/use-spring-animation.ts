@@ -1,8 +1,4 @@
-import {
-  resolveInitialVelocity,
-  type InitialVelocityMode,
-  type InitialVelocityUnit,
-} from '#src/utils/initial-velocity.js';
+import { resolveInitialVelocity, type InitialVelocityMode } from '#src/utils/initial-velocity.js';
 import { cancelFrame, frame, frameData, JSAnimation } from 'framer-motion';
 import { useEffect, useEffectEvent, useLayoutEffect, useRef } from 'react';
 import { useStateWithRef } from './use-state-with-ref.js';
@@ -14,10 +10,9 @@ export interface UseSpringAnimationOptions {
   mass: number;
   preserveVelocity: boolean;
   initialValue?: number;
-  /** Speed in the selected unit; normalized by default. */
+  /** Initial speed as percent of travel distance per second. */
   initialVelocity?: number;
   initialVelocityMode?: InitialVelocityMode;
-  initialVelocityUnit?: InitialVelocityUnit;
   restDelta?: number;
   restSpeed?: number;
 }
@@ -39,7 +34,7 @@ export interface SpringAnimationState {
 }
 
 type StartedOptions = Required<
-  Omit<UseSpringAnimationOptions, 'initialValue' | 'initialVelocity' | 'initialVelocityMode' | 'initialVelocityUnit'>
+  Omit<UseSpringAnimationOptions, 'initialValue' | 'initialVelocity' | 'initialVelocityMode'>
 >;
 function restartReasons(previous: StartedOptions | null, next: StartedOptions): SpringRestartReason[] {
   if (!previous) return ['new-run'];
@@ -62,7 +57,6 @@ export function useSpringAnimation({
   initialValue = targetValue,
   initialVelocity = 0,
   initialVelocityMode = 'toward-target',
-  initialVelocityUnit = 'normalized',
   restDelta = 0.001,
   restSpeed = 0.001,
 }: UseSpringAnimationOptions): SpringAnimationState {
@@ -83,7 +77,7 @@ export function useSpringAnimation({
   const startedOptionsRef = useRef<StartedOptions | null>(null);
   // Editing velocity or its mode affects the next start without restarting motion.
   const readInitialVelocity = useEffectEvent((from: number, target: number) =>
-    resolveInitialVelocity(initialVelocity, initialVelocityMode, from, target, initialVelocityUnit)
+    resolveInitialVelocity(initialVelocity, initialVelocityMode, from, target)
   );
 
   useLayoutEffect(() => {

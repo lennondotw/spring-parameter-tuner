@@ -32,6 +32,8 @@ const zeroVelocity: CurveDisplayState = {
 /** Predict only at a new target, never from intermediate display parameters. */
 export function createCurveTarget(options: SpringResponseOptions) {
   const { omega, zeta } = physicalToPerceptual(options.stiffness, options.damping, options.mass);
+  // Estimate the time window with the user's restDelta AND restSpeed.
+  // createCurvePath independently draws the analytical response without these stop thresholds.
   const { duration, samples } = sampleSpringResponse(options);
   const peak = samples.reduce((maximum, sample) => Math.max(maximum, sample.value), 100);
   const minimum = samples.reduce((minimum, sample) => Math.min(minimum, sample.value), 0);
@@ -47,8 +49,7 @@ export function createCurveTarget(options: SpringResponseOptions) {
         options.initialVelocity ?? 0,
         options.initialVelocityMode ?? 'toward-target',
         0,
-        100,
-        options.initialVelocityUnit
+        100
       ),
     },
   };
